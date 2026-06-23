@@ -16,6 +16,7 @@ and ends with a quick self-check quiz.
 6. [Scan, Scan Lists & Zones](lessons/0006-scan-lists-and-zones.html) — operational layer
 7. [Interleaved Review](lessons/0007-interleaved-review.html) — retrieval practice across 1–6
 8. [How a Radio Talks to a Repeater](lessons/0008-radio-to-repeater-handshake.html) — PTT sequence, air interface
+9. [Radio to Radio (Direct Mode)](lessons/0009-radio-to-radio-direct-mode.html) — simplex, DMO, DCDM
 
 ## Reference
 - [Glossary](reference/glossary.html) — canonical vocabulary

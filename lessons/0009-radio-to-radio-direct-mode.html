@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 9 — Radio to Radio (Direct Mode)</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 09</span>
+</div>
+
+<h1>Radio to Radio (Direct Mode)</h1>
+<p class="subtitle">Take the repeater away and one thing changes everything: with no continuous carrier to keep time, the <em>transmitting radio</em> becomes the clock. Everything else follows from that.</p>
+
+<p>In <a href="0008-radio-to-repeater-handshake.html">Lesson&nbsp;8</a> the repeater was
+the timing master and the radios followed it. <span class="term">Direct Mode</span>
+(DMO) — two radios talking simplex on one frequency, no infrastructure — removes that
+master. The burst and call structure are <em>identical</em>; what changes is who keeps
+time, how a radio senses the channel, and how many conversations fit. Get those three
+deltas and you understand simplex.</p>
+
+<div class="callout">
+  <span class="label">The one big idea</span>
+  No repeater means <strong>no continuous downlink</strong> to pre-synchronise against.
+  So the <strong>transmitting radio is the timing reference</strong>; a receiver locks
+  on, cold, from the <strong>sync pattern in the very first burst</strong> of the
+  transmission.<sup class="cite"><a href="#s1">1</a></sup>
+</div>
+
+<h2>The three things that change</h2>
+
+<h3>1 · Timing master shifts to the transmitter</h3>
+<p>With a repeater, you sync to its always-on carrier before you ever key up. In direct
+mode there's nothing on the air between calls — so radios <strong>transmit
+asynchronously</strong>, and any radio in range syncs <em>to that transmission</em> to
+receive it.<sup class="cite"><a href="#s1">1</a></sup> The standard guarantees this works
+by requiring the <strong>first burst to carry a sync pattern</strong> so a cold receiver
+can detect the signal and find the burst centre. A <strong>preamble</strong> (CSBK)
+often precedes the header to give far radios extra time to wake — this matters more in
+DMO precisely because there's no carrier keeping receivers warm.</p>
+
+<h3>2 · No CACH — sense the channel directly</h3>
+<p>Recall the <span class="term">CACH</span> rode on the <em>repeater's outbound</em>
+stream and told radios "slot busy/idle." Simplex has no outbound stream, so
+<strong>there is no CACH</strong> and no busy/idle bit to consult.<sup class="cite"><a href="#s2">2</a></sup>
+A radio instead falls back to plain <strong>RF carrier / sync sensing</strong> — listen
+for on-channel DMR activity before keying. That's why the recommended
+<span class="term">admit criterion</span> for simplex is <strong>Channel Free</strong>
+(not Color Code Free, which needs a repeater to poll).<sup class="cite"><a href="#s3">3</a></sup></p>
+
+<h3>3 · One conversation, not two — unless DCDM</h3>
+<p>Without a master coordinating two slots, basic simplex effectively carries
+<strong>one conversation</strong> — the transmitter sends bursts at roughly 50% duty and
+the "second slot" simply goes unmanaged. A receiving radio is <strong>slot-agnostic</strong>:
+it accepts the call from either slot.<sup class="cite"><a href="#s4">4</a></sup> The
+two-slot magic from Lesson&nbsp;1 needs infrastructure; on bare simplex it isn't there.</p>
+
+<div class="callout">
+  <span class="label">Careful with the shorthand</span>
+  People say "simplex uses only one timeslot." More precisely: <em>there is no synchronised
+  two-slot structure at all</em> because no master defines it. One conversation's worth of
+  airtime, the other slot idle. Both phrasings describe the same reality.
+</div>
+
+<h2>Dual Capacity Direct Mode (DCDM) — both slots, still no repeater</h2>
+<p>DCDM is the exception that gets <strong>two simultaneous conversations</strong> on one
+simplex frequency. The radios <strong>elect a Channel Timing Leader</strong> (by a
+Preferred / Eligible / Ineligible setting — ideally a stationary, powered radio), and the
+leader synthesises the repeater's missing timekeeping by broadcasting a <strong>timing
+beacon</strong> (~600&nbsp;ms every 4.5&nbsp;min) on the "All Site" <strong>color code&nbsp;15</strong>,
+re-radiated to distant radios via "forced propagations."<sup class="cite"><a href="#s5">5</a></sup>
+Caveats: it's a 2nd-gen-radio feature, needs every participant to support it, and is
+rarely seen in the wild — fragile in mixed fleets.</p>
+
+<h2>What stays exactly the same</h2>
+<ul>
+  <li><strong>Burst structure</strong> — same 264-bit burst (108 + 48-centre + 108).</li>
+  <li><strong>Call skeleton</strong> — the originating radio emits it directly:
+  <em>Voice LC Header → superframes (A–F, 360&nbsp;ms) → Terminator with LC</em>. No repeater re-radiates it.</li>
+  <li><strong>Color code</strong> — still used; <strong>both radios must match</strong> (CC15 is reserved for DCDM beacons).<sup class="cite"><a href="#s3">3</a></sup></li>
+  <li><strong>Late entry</strong> — LC repeated in B–F means a late joiner still recovers source/talkgroup/call type within one superframe.</li>
+</ul>
+
+<h3>One tell: who sent the burst</h3>
+<p>The 48-bit sync words differ for <strong>MS-sourced</strong> (a radio) versus
+<strong>BS-sourced</strong> (a repeater) bursts. A direct-mode radio transmits the
+MS-sourced pattern, so a decoder can tell <em>direct-mode traffic from repeater traffic
+by the sync word alone</em>.<sup class="cite"><a href="#s2">2</a></sup></p>
+
+<h3>Related: talkaround &amp; simplex hotspots</h3>
+<p><strong>Talkaround</strong> is simplex done on a repeater's <em>output</em> frequency
+to bypass it when it's down or out of range — TX moved to equal RX.<sup class="cite"><a href="#s6">6</a></sup>
+A <strong>simplex hotspot</strong> is single-frequency, so it too runs DMO and handles
+one slot at a time (convention: CC1, Channel Free); a <em>duplex</em> hotspot acts like a
+mini-repeater and exposes both slots.</p>
+
+<table class="cmp">
+  <tr><th>Aspect</th><th>Repeater (Lesson 8)</th><th>Direct Mode / simplex</th></tr>
+  <tr><td>Timing master</td><td>Repeater's continuous downlink</td><td><strong>The transmitting radio</strong></td></tr>
+  <tr><td>Cold sync</td><td>Pre-synced to carrier</td><td>From 1st burst's sync pattern</td></tr>
+  <tr><td>CACH (busy/idle)</td><td>Present</td><td><strong>None</strong> — sense RF directly</td></tr>
+  <tr><td>Admit criterion</td><td>Color Code Free</td><td><strong>Channel Free</strong></td></tr>
+  <tr><td>Conversations</td><td>Two (TS1 + TS2)</td><td>One (both only via DCDM)</td></tr>
+  <tr><td>Sync source</td><td>BS-sourced patterns</td><td>MS-sourced patterns</td></tr>
+  <tr><td>Color code</td><td>Must match repeater</td><td>Must match the other radio</td></tr>
+  <tr><td>Range</td><td>Extended by repeater</td><td>Line-of-sight, radio-to-radio</td></tr>
+</table>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge</span>
+  Your radios are Android + DMR module, so a device may be bridging a <em>direct-mode</em>
+  DMR call to PoC — no repeater involved. Implications:
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Channel sensing is the device's job:</strong> with no CACH, "is the channel busy" comes from RF sensing in the module — your PoC→DMR side should respect Channel-Free admit so it doesn't stomp an active simplex QSO.</li>
+    <li><strong>Same call metadata:</strong> the Voice LC Header still carries source ID, talkgroup and call type — your TG⇄PoC-group and RadioID⇄user maps work identically to the repeater case.</li>
+    <li><strong>Slot-agnostic RX:</strong> don't assume a fixed slot for incoming simplex; the module accepts either. Don't key your mapping logic on slot for direct mode.</li>
+    <li><strong>Range is the reason to bridge:</strong> simplex is line-of-sight only — bridging it onto PoC is exactly how your product extends a direct call beyond the horizon, doing what a repeater+network would have.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"In direct mode with no repeater, what provides the TDMA timing reference?","options":["A central network server","The transmitting radio itself","The receiving radio always","A shared atomic clock"],"answer":1,"why":"With no continuous downlink, the transmitting radio is the timing master; receivers sync to its first-burst sync pattern. [VK4PK/ETSI]"},
+  {"q":"Why is there no CACH busy/idle indicator in simplex?","options":["Color codes replace it","No continuous outbound stream","It moved to the uplink","Simplex disables signalling"],"answer":1,"why":"CACH rides only on a repeaters continuous outbound; simplex has none, so radios sense RF/sync activity directly."},
+  {"q":"Which admit criterion is recommended for simplex, and why?","options":["Color Code Free, polls repeater","Channel Free, senses activity","Always, ignores the channel","Slot Free, checks slot two"],"answer":1,"why":"Color Code Free needs a repeater to poll; simplex uses Channel Free, which keys only when no on-channel activity is detected."},
+  {"q":"How many simultaneous conversations does BASIC simplex carry?","options":["Two, one per slot","One; both only via DCDM","Four with color codes","Unlimited within range"],"answer":1,"why":"No master coordinates two slots, so basic simplex is one conversation; two slots on simplex require Dual Capacity Direct Mode."},
+  {"q":"Can a decoder tell direct-mode traffic from repeater traffic?","options":["No, they are identical","Yes, by the sync pattern","Only by the frequency","Only via the color code"],"answer":1,"why":"MS-sourced (radio) and BS-sourced (repeater) bursts use distinct 48-bit sync words, so the source type is visible from the sync alone."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://static.dm3mat.de/qdmr/manual/ch01s03.html">qdmr manual — DMR Simplex Operation</a>
+  for the practical picture, and the <a href="https://www.lyonscomputer.com.au/MMDVM/DMR-Signal-Processing-Notes/DMR-Signal-Processing-Notes.html">VK4PK DMR Signal Processing Notes</a>
+  for the timing/sync-pattern detail. For DCDM specifically, the <a href="https://cwh050.mywikis.wiki/wiki/Dual_Capacity_Direct_Mode">MOTOTRBO DCDM wiki</a>.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Should our device ever try DCDM, or is single-slot simplex enough?",
+  "Draw the cold-sync timeline for a receiver catching a simplex call," or
+  "How does our Channel-Free sensing decide it's safe to bridge PoC→DMR onto a simplex channel?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0008-radio-to-repeater-handshake.html">← Lesson 8</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <span style="color:var(--ink-soft);">Air-interface pair complete: repeater (L8) + direct mode (L9).</span>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://patents.google.com/patent/US20120287921A1/en">Motorola US20120287921A1 — Synchronizing direct-mode TDMA</a> — TX is timing master; slot boundaries defined by received sync word; first-burst sync requirement.</li>
+    <li id="s2"><a href="https://www.lyonscomputer.com.au/MMDVM/DMR-Signal-Processing-Notes/DMR-Signal-Processing-Notes.html">VK4PK — DMR Signal Processing Notes</a> — CACH is outbound-only; six 48-bit sync patterns; MS-sourced vs BS-sourced distinction.</li>
+    <li id="s3"><a href="https://static.dm3mat.de/qdmr/manual/ch01s03.html">qdmr — DMR Simplex Operation</a> — Channel Free admit for simplex; color code must match; CC1 convention.</li>
+    <li id="s4"><a href="https://forums.radioreference.com/threads/does-dmr-simplex-use-1-time-slot-or-2.400060/">RadioReference — DMR simplex: 1 timeslot or 2?</a> — ~50% duty, no synchronised two-slot structure, slot-agnostic receive.</li>
+    <li id="s5"><a href="https://cwh050.mywikis.wiki/wiki/Dual_Capacity_Direct_Mode">MOTOTRBO — Dual Capacity Direct Mode</a> — timing-leader election; CC15 beacons every 4.5 min; limitations.</li>
+    <li id="s6"><a href="https://forums.radioreference.com/threads/dmr-talkaround-vs-simplex-tdma.376607/">RadioReference — Talkaround vs simplex TDMA</a> — talkaround on repeater output frequency; not the same as DCDM.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

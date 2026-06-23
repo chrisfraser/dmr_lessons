@@ -12,6 +12,10 @@
   Engineering mirror of the standard's bit/timing fields. Use for: exact burst layout, EMB, 4-FSK timing, late entry.
 - [QRadioLink — open-source DMR transceiver](https://qradiolink.org/open-source-DMR-transceiver-implementation.html)
   Use for: how timing-master sync, CACH, and idle-burst sync work in a real implementation.
+- [qdmr manual — DMR Simplex Operation](https://static.dm3mat.de/qdmr/manual/ch01s03.html)
+  Use for: direct-mode/simplex behaviour, Channel-Free admit, color code, hotspot conventions.
+- [MOTOTRBO — Dual Capacity Direct Mode (DCDM)](https://cwh050.mywikis.wiki/wiki/Dual_Capacity_Direct_Mode)
+  Use for: two-slot simplex, timing-leader election, CC15 beacons, DCDM limitations.
 - [RadioReference DMR Wiki](https://wiki.radioreference.com/index.php/DMR)
   Broad, accurate community overview. Use for: TDMA, vocoder, channels, repeaters at a glance.
 - [Amateur Radio Guide to DMR (W2XAB)](https://www.dmr-marc.net/media/Amateur_Radio_Guide_to_DMR_Rev_I_20150510.pdf)

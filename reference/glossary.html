@@ -121,6 +121,16 @@ once they are understood — it is a record of compressed knowledge, not a dicti
   <dt>Late entry</dt>
   <dd>Recovering a call's identity after tuning in mid-transmission, because the Link Control is repeated in every superframe (≤360 ms to recover).</dd>
 
+  <dt>Direct Mode <span class="alias">— DMO, simplex</span></dt>
+  <dd>Radio-to-radio on one frequency with no repeater. The transmitting radio is the timing master; there is no CACH; basic DMO carries one conversation and the receiver is slot-agnostic. Line-of-sight range.
+  <div class="avoid">Avoid: "talkaround" (that's DMO specifically on a repeater's output frequency).</div></dd>
+
+  <dt>DCDM <span class="alias">— Dual Capacity Direct Mode</span></dt>
+  <dd>A simplex mode that runs two conversations on one frequency by electing a timing-leader radio that broadcasts timing beacons (color code 15). 2nd-gen-radio feature; rare in practice.</dd>
+
+  <dt>Talkaround</dt>
+  <dd>Direct-mode operation on a repeater's <em>output</em> frequency, to bypass the repeater when it's down or out of range (TX moved to equal RX).</dd>
+
 </dl>
 
 <h2>Voice &amp; bridging</h2>
