@@ -86,6 +86,27 @@ That's what lets a polite radio decide <em>instantly</em> whether it may transmi
   straight in. Hang time is per-slot.</li>
 </ol>
 
+<h3>The same sequence as a timeline</h3>
+<div class="seqd">
+  <div class="seqd-heads">
+    <div class="h">Radio (MS)</div>
+    <div class="h">Repeater (BS)</div>
+  </div>
+  <div class="track">
+    <div class="note">Repeater transmits continuously — IDLE bursts + CACH + sync (it is the timing master)</div>
+    <div class="evt"><span>PTT pressed</span></div>
+    <div class="note">Admit check against the downlink — slot free &amp; matching color code? (Cl. 5.2)</div>
+    <div class="msg ltr dashed"><div class="lbl">Preamble CSBK <em>(optional)</em></div><div class="line"></div></div>
+    <div class="msg ltr"><div class="lbl">Voice LC Header — source ID · destination TG · call type</div><div class="line"></div></div>
+    <div class="msg rtl"><div class="lbl">Re-radiated on downlink → every radio on the matching color code</div><div class="line"></div></div>
+    <div class="msg ltr"><div class="lbl">Voice superframes A–F <span class="loopn">repeat / 360 ms</span></div><div class="line"></div></div>
+    <div class="evt"><span>PTT released</span></div>
+    <div class="msg ltr"><div class="lbl">Terminator with LC — closes the call</div><div class="line"></div></div>
+    <div class="note">Hang time — slot + talkgroup held briefly so the reply lands on the same conversation</div>
+  </div>
+</div>
+<p class="flow-caption">Solid arrows = the radio's uplink; the dashed one is optional; the right-to-left arrow is the repeater re-radiating on its outbound. Note there is no "grant" message coming back — only the radio's own admit check.</p>
+
 <h2>Inside one burst (264 bits, 27.5 ms)</h2>
 <p>Every transmission above is a stream of these. A burst is two 108-bit payload halves
 around a 48-bit centre. The centre is the clever part: it's <em>either</em> a SYNC pattern

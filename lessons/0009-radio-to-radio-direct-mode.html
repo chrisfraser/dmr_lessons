@@ -97,6 +97,29 @@ A <strong>simplex hotspot</strong> is single-frequency, so it too runs DMO and h
 one slot at a time (convention: CC1, Channel Free); a <em>duplex</em> hotspot acts like a
 mini-repeater and exposes both slots.</p>
 
+<h3>The cold-sync timeline</h3>
+<p>Compare this with the repeater timeline in <a href="0008-radio-to-repeater-handshake.html">Lesson&nbsp;8</a>:
+the same skeleton, but Radio&nbsp;A emits it directly and Radio&nbsp;B has to lock on from
+nothing — no carrier was there a moment ago.</p>
+<div class="seqd">
+  <div class="seqd-heads">
+    <div class="h">Radio A (TX · timing master)</div>
+    <div class="h">Radio B (RX)</div>
+  </div>
+  <div class="track">
+    <div class="note">Channel idle — no carrier, no CACH, nothing to pre-sync against</div>
+    <div class="evt"><span>PTT pressed</span></div>
+    <div class="note">Channel-Free sense — listen for on-channel activity before keying</div>
+    <div class="msg ltr dashed"><div class="lbl">Preamble CSBK — wake far radios from cold</div><div class="line"></div></div>
+    <div class="msg ltr"><div class="lbl">Voice LC Header → B cold-syncs from the 1st burst's sync pattern</div><div class="line"></div></div>
+    <div class="msg ltr"><div class="lbl">Voice superframes A–F <span class="loopn">repeat / 360 ms</span> → B locked; late entry ≤360 ms</div><div class="line"></div></div>
+    <div class="evt"><span>PTT released</span></div>
+    <div class="msg ltr"><div class="lbl">Terminator with LC — closes the call</div><div class="line"></div></div>
+    <div class="note">Channel idle again — no hang time, because there's no repeater to hold the slot</div>
+  </div>
+</div>
+<p class="flow-caption">Every arrow is Radio&nbsp;A transmitting; Radio&nbsp;B only ever receives. There is no second lane of infrastructure — and crucially, no pre-existing carrier, so B's first job is to lock onto A's opening sync pattern.</p>
+
 <table class="cmp">
   <tr><th>Aspect</th><th>Repeater (Lesson 8)</th><th>Direct Mode / simplex</th></tr>
   <tr><td>Timing master</td><td>Repeater's continuous downlink</td><td><strong>The transmitting radio</strong></td></tr>
