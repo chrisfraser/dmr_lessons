@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 7 — Interleaved Review</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 07 · Review</span>
+</div>
+
+<h1>Interleaved Review</h1>
+<p class="subtitle">No new material — just retrieval. Questions are deliberately shuffled across all six lessons, so you practise <em>recognising which idea applies</em>, not just recalling a single topic in order.</p>
+
+<p>This is the lesson that makes the rest stick. Reading feels like learning but fades
+fast (fluency); pulling answers from memory, cold and out of order, builds the durable
+kind (storage strength). Don't peek back first — attempt each, then read the feedback.
+Come back to this page again in a few days; spacing is the other half of retention.</p>
+
+<div class="callout">
+  <span class="label">How to use this</span>
+  Answer from memory before clicking. A wrong answer with effort beats a right answer you
+  guessed — the struggle is what consolidates it. Re-take the whole set next session.
+</div>
+
+<h2>Part 1 — Rapid recall (mixed)</h2>
+<div class="quiz" data-quiz='[
+  {"q":"How many conversations can one DMR Tier II repeater carry at the same instant?","options":["One conversation only","Exactly two conversations","Up to four conversations","Unlimited conversations"],"answer":1,"why":"Two: one per time slot (TS1/TS2) on the single 12.5 kHz carrier. [L1/L2]"},
+  {"q":"Which field is the digital equivalent of an analog PL/CTCSS tone?","options":["The talkgroup number","The color code value","The receive frequency","The time slot index"],"answer":1,"why":"Color code (0-15) must match the repeater to gain access, exactly like a PL tone. [L1]"},
+  {"q":"What crosses the air in a time slot during voice?","options":["Raw uncompressed PCM","Compressed AMBE+2 frames","The talkgroup ID only","An FM analog signal"],"answer":1,"why":"~3,600 bps of AMBE+2 frames, not raw audio. [L4]"},
+  {"q":"A Private Call is addressed to what?","options":["A talkgroup number","A single Radio ID","The All Call ID","A color code"],"answer":1,"why":"One-to-one, addressed by the individuals unique Radio ID. [L3/L5]"},
+  {"q":"What is the reserved destination ID for an All Call?","options":["The number zero","16777215 (0xFFFFFF)","Talkgroup ninety-one","Color code fifteen"],"answer":1,"why":"The all-ones 24-bit address; restricted per-radio by the code plug, not the network. [L3]"},
+  {"q":"A Radio ID field is how many bits wide?","options":["Sixteen bits wide","Twenty-four bits wide","Thirty-two bits wide","Forty-eight bits wide"],"answer":1,"why":"24-bit: values 0-16,777,215, so no overflow, only exhaustion. [L5]"}
+]'></div>
+
+<h2>Part 2 — Apply it (scenarios)</h2>
+<div class="quiz" data-quiz='[
+  {"q":"A user keys up; the repeater clearly receives them but the intended group never hears it. Color code is confirmed correct. Likeliest cause?","options":["Transmit power too low","Wrong time slot or talkgroup","The Radio ID expired","Vocoder licence missing"],"answer":1,"why":"Reaching the repeater means freq+CC are fine; being unheard points to landing in the wrong slot or addressing the wrong talkgroup. [L1/L3]"},
+  {"q":"Your bridge sends voice PoC→DMR. Besides audio, what metadata must it stamp on?","options":["Only the Radio ID","Talkgroup, slot and color code","Just the color code","Nothing extra needed"],"answer":1,"why":"PoC carries no DMR routing metadata; the map must supply talkgroup + time slot + color code for the target repeater. [L3]"},
+  {"q":"The DMR module hands your app raw AMBE+2 frames, not PCM. What does this enable?","options":["Skipping the talkgroup map","Relaying with no transcode loss","Removing all network latency","Unlimited concurrent talkers"],"answer":1,"why":"If both ends speak AMBE+2 you relay frames untouched, avoiding the >12% transcode loss. [L4]"},
+  {"q":"In the infrastructure ladder, your PoC platform stands in for which rung?","options":["The handset vocoder","The internet network","The duplex offset","The color code gate"],"answer":1,"why":"PoC replaces the network transport rung, so you also own the identity and routing tables. [L2/L5]"},
+  {"q":"A DMR user scans three talkgroups and two key up at once. What must your PoC side decide?","options":["Which AMBE licence applies","How to arbitrate concurrent talkers","The 24-bit ID ceiling","Which zone to display"],"answer":1,"why":"A DMR slot carries one talker at a time; the bridge needs priority/queueing for simultaneous mapped groups. [L6]"},
+  {"q":"Which Tier should the v1 bridge be designed around?","options":["Tier I simplex","Tier II conventional","Tier III trunked","No tier matters"],"answer":1,"why":"Tier II (conventional 2-slot repeaters) is the common real-world case. [L5]"}
+]'></div>
+
+<h2>Part 3 — Synthesis</h2>
+<p>One open question to answer in your own words (then ask me to critique it):</p>
+<div class="callout bridge-note">
+  <span class="label">Write it out</span>
+  Trace a single voice transmission <strong>DMR → PoC</strong> end to end through your
+  on-device bridge. Name, in order: what the handset produces, what the DMR module exposes,
+  the routing metadata the bridge reads, the codec decision it faces, and how it picks the
+  destination on the PoC side. If you can write that paragraph cleanly, you own the foundations.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Paste your synthesis paragraph and I'll critique it. Or ask: "Quiz me harder,"
+  "Where am I weakest across these six topics?", or "I'm ready — let's design the
+  bridge's mapping tables for real."
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0006-scan-lists-and-zones.html">← Lesson 6</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0008-radio-to-repeater-handshake.html">Next → Lesson 8: How a radio talks to a repeater</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <p style="font-size:0.82rem;color:var(--ink-soft);">This review draws only on Lessons 1–6; see each lesson's own cited sources, and the <a href="../reference/glossary.html">glossary</a>.</p>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

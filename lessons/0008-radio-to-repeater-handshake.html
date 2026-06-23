@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 8 — How a Radio Talks to a Repeater</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  /* lesson-local: numbered sequence steps */
+  ol.seq { counter-reset: step; list-style: none; padding-left: 0; margin: 1.4rem 0; }
+  ol.seq > li { position: relative; padding: 0.5rem 0 0.8rem 2.8rem; border-top: 1px solid var(--rule); }
+  ol.seq > li:before { counter-increment: step; content: counter(step); position: absolute; left: 0; top: 0.55rem; width: 1.8rem; height: 1.8rem; background: var(--accent); color: #fff; border-radius: 50%; text-align: center; line-height: 1.8rem; font-size: 0.85rem; font-weight: 600; }
+  ol.seq > li .s-head { font-weight: 600; }
+  ol.seq > li .clause { font-size: 0.72rem; color: var(--ink-soft); font-variant: small-caps; letter-spacing: 0.03em; }
+  /* burst diagram */
+  .burst { display: flex; border: 1px solid var(--rule); border-radius: 5px; overflow: hidden; margin: 1.1rem 0; font-size: 0.78rem; text-align: center; }
+  .burst div { padding: 0.6rem 0.3rem; }
+  .burst .pay { flex: 108; background: #eaf1f5; }
+  .burst .ctr { flex: 48; background: var(--accent-soft); border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
+  .burst small { display:block; color: var(--ink-soft); font-size: 0.68rem; }
+</style>
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 08</span>
+</div>
+
+<h1>How a Radio Talks to a Repeater</h1>
+<p class="subtitle">From PTT press to release, step by step. The headline: in conventional Tier II there is <em>no handshake</em> — it's listen, sync, and transmit a structured stream.</p>
+
+<p>You asked for every step of a device talking to a repeater. The first thing to
+unlearn is the word "connection." Conventional DMR <span class="term">Tier&nbsp;II</span>
+has no TCP-style SYN/ACK, no login, no channel-grant. The repeater never says "go
+ahead." What <em>looks</em> like a handshake is two simpler things: the radio
+<strong>one-way synchronising</strong> to the repeater's clock, and a quick
+<strong>politeness check</strong> before it keys.<sup class="cite"><a href="#s1">1</a></sup></p>
+
+<div class="callout">
+  <span class="label">The one big idea</span>
+  The repeater's outbound transmission is the <strong>timing master</strong>; the radio
+  follows it. Access is gated by a <strong>color-code + slot-free</strong> check the
+  <em>radio</em> performs — not by permission the repeater grants. (Trunked
+  <span class="term">Tier&nbsp;III</span> <em>does</em> add real registration and channel
+  grants — don't conflate the two.)
+</div>
+
+<h2>Before anyone keys up: staying in sync</h2>
+<p>An active repeater transmits <strong>continuously</strong> on its outbound frequency,
+even with no call up — sending IDLE bursts with embedded sync patterns and the
+<span class="term">CACH</span>. A radio decodes this to lock onto where
+<strong>slot&nbsp;1</strong> and <strong>slot&nbsp;2</strong> begin (each slot 30&nbsp;ms;
+a frame of both = 60&nbsp;ms). This is the channel-timing relationship the standard
+defines in <strong>TS&nbsp;102&nbsp;361-1, Clause&nbsp;4.4</strong>.<sup class="cite"><a href="#s1">1</a></sup>
+The uplink (radio→repeater) carries no CACH — the radio puts a <em>guard period</em>
+there instead, to absorb timing differences between near and far radios.</p>
+
+<h3>CACH — how the radio knows a slot is free</h3>
+<p>The <span class="term">CACH</span> (Common Announcement Channel) rides on the
+repeater's outbound stream, interleaved between the two slots. It tells a listening
+radio, without decoding any voice: is this slot <strong>busy or idle</strong> (AT),
+is it <strong>slot 1 or 2</strong> (TC), and carries fragments of a Short LC (LCSS).<sup class="cite"><a href="#s1">1</a></sup>
+That's what lets a polite radio decide <em>instantly</em> whether it may transmit.</p>
+
+<h2>The PTT sequence — press to release</h2>
+<ol class="seq">
+  <li><span class="s-head">PTT pressed → channel-access check.</span> <span class="clause">TS 102 361-1, Clause 5.2</span><br>
+  The radio applies its <strong>admit criterion</strong> against what it hears on the
+  downlink: <em>Always</em> (impolite — key regardless), <em>Channel Free</em> (only if
+  the slot is idle), or <em>Color Code Free</em> (only if the slot is idle <em>on the
+  repeater matching my color code</em> — the recommended setting). The
+  <span class="term">color code</span> here is a filter to reject co-channel repeaters,
+  not an address.<sup class="cite"><a href="#s2">2</a></sup></li>
+
+  <li><span class="s-head">(Optional) Preamble CSBK.</span><br>
+  On networked/MMDVM systems the radio may send one or more Control Signalling Blocks
+  first — used to wake the system and help scanning/late-entry radios. Formal repeater
+  activation messaging is defined in <strong>TS&nbsp;102&nbsp;361-2, Clause&nbsp;4.2</strong>.<sup class="cite"><a href="#s3">3</a></sup></li>
+
+  <li><span class="s-head">Voice LC Header — sent before any voice.</span><br>
+  A Link Control PDU announcing the call: <strong>source ID</strong> (24-bit), <strong>destination</strong>
+  (talkgroup or Radio ID), <strong>call type</strong> (the FLCO opcode: group vs individual),
+  and <strong>FID</strong> (feature/manufacturer ID). This is what lets every receiving radio
+  decide "is this for me?" and lock on.</li>
+
+  <li><span class="s-head">Voice superframes — the actual speech.</span><br>
+  Voice flows as <span class="term">superframes</span> of <strong>6 bursts, A–F (360&nbsp;ms)</strong>.
+  <strong>Burst A</strong> carries the voice SYNC; <strong>bursts B–F</strong> replace sync
+  with <strong>embedded signalling</strong> carrying the Link Control again, fragmented.
+  Each burst's payload = three 20&nbsp;ms AMBE+2 vocoder frames = 60&nbsp;ms of speech.</li>
+
+  <li><span class="s-head">PTT released → Terminator with LC.</span><br>
+  The radio sends a terminator burst (its own sync pattern) carrying the full Link Control
+  once more, cleanly closing the call.</li>
+
+  <li><span class="s-head">Hang time.</span><br>
+  The repeater keeps that <strong>slot + talkgroup reserved</strong> for a second or two so
+  the other party can reply without the slot being grabbed for a different talkgroup. A radio
+  on a <em>different</em> talkgroup hears "busy"; one on the <em>same</em> talkgroup may key
+  straight in. Hang time is per-slot.</li>
+</ol>
+
+<h2>Inside one burst (264 bits, 27.5 ms)</h2>
+<p>Every transmission above is a stream of these. A burst is two 108-bit payload halves
+around a 48-bit centre. The centre is the clever part: it's <em>either</em> a SYNC pattern
+<em>or</em> embedded signalling (a 16-bit EMB + a 32-bit LC fragment).</p>
+<div class="burst">
+  <div class="pay">108 bits<small>payload (voice/data)</small></div>
+  <div class="ctr">48 bits<small>SYNC <em>or</em> EMB+LC</small></div>
+  <div class="pay">108 bits<small>payload (voice/data)</small></div>
+</div>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-top:-0.4rem;">9600&nbsp;bps, 4-FSK, 12.5&nbsp;kHz channel. The 16-bit EMB carries the color code, encryption flags, and the 2-bit LCSS pointer that says which LC fragment this is.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<h3>Why the LC is repeated: late entry</h3>
+<p>Because bursts B–F re-send the Link Control every superframe, a radio that joins
+<em>mid-transmission</em> — missing the header — still recovers the source, talkgroup and
+call type within one superframe (≤360&nbsp;ms). That's <strong>late entry</strong>, and it's
+why scanning radios can announce who's talking after tuning in late.</p>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge</span>
+  Your DMR module handles all of this air-interface choreography for you — you won't be
+  timing bursts. But three of these elements surface directly at your bridge boundary:
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>The Voice LC Header / embedded LC</strong> is where source ID, talkgroup and call type come from — the exact fields you map to PoC groups/users. Expect the module's API to expose these as call-start metadata.</li>
+    <li><strong>Late entry</strong> means a DMR call's identity is knowable even if you start listening mid-stream — useful if your bridge attaches to an in-progress call.</li>
+    <li><strong>Hang time</strong> is a real behaviour to mirror: after a PoC→DMR transmission, hold the talkgroup briefly so the DMR reply lands on the same conversation. Don't tear down instantly.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"In conventional DMR Tier II, how does a radio get permission to transmit on a repeater?","options":["The repeater grants a channel","It performs a politeness check","It registers then awaits ack","A server assigns a slot"],"answer":1,"why":"There is no handshake or grant; the radio checks its admit criterion (slot free / matching color code) and just transmits. [Clause 5.2]"},
+  {"q":"Who is the TDMA timing master that the other side synchronises to?","options":["The subscriber radio uplink","The repeater outbound downlink","A central network server","Whichever keys up first"],"answer":1,"why":"The repeaters continuous outbound transmission is the timing master; the radio one-way syncs to it. [Clause 4.4]"},
+  {"q":"What does the Voice LC Header carry that your bridge needs?","options":["The audio gain level","Source ID, destination, call type","The repeater serial number","The hang-time duration"],"answer":1,"why":"It announces source Radio ID, destination talkgroup/ID, and call type (FLCO) — exactly the fields you map to PoC."},
+  {"q":"Why can a radio that tunes in mid-transmission still show who is talking?","options":["It queries a server","LC is repeated in every superframe","The header is sent continuously","Hang time replays the call"],"answer":1,"why":"Link Control is re-sent via embedded signalling in bursts B-F of every superframe, so a late joiner recovers it within 360 ms — late entry."},
+  {"q":"What does the 48-bit centre of a burst contain?","options":["Always the voice payload","SYNC or embedded signalling","The color code only","A guard period gap"],"answer":1,"why":"The centre is either a SYNC pattern (e.g. burst A) or embedded signalling: a 16-bit EMB plus a 32-bit LC fragment."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <strong>ETSI TS&nbsp;102&nbsp;361-1</strong> — Clause&nbsp;4.4 (channel timing relationships) and
+  Clause&nbsp;5.2 (channel access), plus <strong>TS&nbsp;102&nbsp;361-2</strong> Clause&nbsp;4.2 (repeater
+  activation messaging). The definitive word.
+  <a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236101/01.04.05_60/ts_10236101v010405p.pdf">PDF (open in browser)</a>.
+  If the ETSI PDF blocks you, the <a href="https://www.lyonscomputer.com.au/MMDVM/DMR-Signal-Processing-Notes/DMR-Signal-Processing-Notes.html">VK4PK DMR Signal Processing Notes</a> mirror the exact field/timing definitions.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "How much of this does the DMR module hide vs expose in its SDK?",
+  "Draw the timeline of one PTT as a sequence diagram," or
+  "What's different in this sequence for a simplex (no-repeater) call?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0007-interleaved-review.html">← Lesson 7</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <span style="color:var(--ink-soft);">Deeper dive — the air interface beneath the foundations.</span>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236101/01.04.05_60/ts_10236101v010405p.pdf">ETSI TS 102 361-1</a> — Clause 4.4 channel timing relationships, Clause 5.2 channel access; CACH (AT/TC/LCSS), burst & superframe structure.</li>
+    <li id="s2"><a href="https://static.dm3mat.de/qdmr/manual/ch02s04.html">qdmr manual — admit criteria & color code</a> — Always / Channel Free / Color Code Free; color code as co-channel filter.</li>
+    <li id="s3"><a href="https://www.etsi.org/standards">ETSI TS 102 361-2</a> — Clause 4.2 repeater activation messaging (per user-supplied reference).</li>
+    <li id="s4"><a href="https://www.lyonscomputer.com.au/MMDVM/DMR-Signal-Processing-Notes/DMR-Signal-Processing-Notes.html">VK4PK — DMR Signal Processing Notes</a> — 264-bit burst, 108/48/108 layout, EMB fields, 9600 bps 4-FSK, late entry.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

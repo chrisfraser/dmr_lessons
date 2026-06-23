@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2 — How a DMR Transmission Travels</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 02</span>
+</div>
+
+<h1>How a DMR Transmission Travels</h1>
+<p class="subtitle">From PTT to the far ear, DMR voice can take three different roads. Knowing which road tells you exactly where your on-device bridge plugs in.</p>
+
+<p>In <a href="0001-anatomy-of-a-dmr-channel.html">Lesson&nbsp;1</a> you learned the
+four fields that define a <span class="term">channel</span>. Now follow the voice
+itself. The same handset can reach the other person three ways — and the reach mode
+decides whether the internet is even involved, which matters a great deal for a
+device that can also speak <span class="term">PoC</span>.</p>
+
+<h2>The voice path, inside the radio</h2>
+<p>Every DMR transmission starts the same way: your voice is sampled, then squeezed
+by the <span class="term">vocoder</span> (DVSI AMBE+2) down to roughly 3,600&nbsp;bps
+of digital data.<sup class="cite"><a href="#s1">1</a></sup> That tiny compressed
+stream — not raw audio — is what flies over the air in one <span class="term">time slot</span>.
+At the far radio, the vocoder runs in reverse to reconstruct speech.</p>
+
+<div class="callout bridge-note">
+  <span class="label">Hold onto this for the bridge</span>
+  The thing crossing the air is <strong>AMBE+2 frames</strong>. On your Android radio,
+  the central question is what the DMR module hands your app at the bridge point:
+  decoded <strong>PCM audio</strong> (you then re-encode for PoC — a transcode) or the
+  <strong>raw AMBE frames</strong> (you could relay them untouched). That one fact
+  decides whether bridging costs voice quality. We dedicate Lesson&nbsp;4 to it.
+</div>
+
+<h2>Three roads the transmission can take</h2>
+
+<h3>1 · Direct / simplex — no infrastructure</h3>
+<p>Two radios on the same frequency, time slot and color code talk straight to each
+other, radio-to-radio. No repeater, no internet. Range is line-of-sight.<sup class="cite"><a href="#s2">2</a></sup>
+This is DMR <span class="term">Tier&nbsp;I</span>-style operation.</p>
+<div class="flow">
+  <div class="node"><span class="n-title">Radio A</span><span class="n-sub">PTT · AMBE+2</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">RF, direct</span><span class="n-sub">same freq/slot/CC</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Radio B</span><span class="n-sub">decodes</span></div>
+</div>
+
+<h3>2 · Through a repeater — extended local range</h3>
+<p>A <span class="term">repeater</span> receives you on one frequency and re-transmits
+on another (the duplex offset), synchronising both time slots so two conversations
+share the channel.<sup class="cite"><a href="#s3">3</a></sup> This covers a town or
+region but, on its own, stays local.</p>
+<div class="flow">
+  <div class="node"><span class="n-title">Radio A</span><span class="n-sub">TX freq</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Repeater</span><span class="n-sub">RX→TX, syncs slots</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Radio B</span><span class="n-sub">RX freq</span></div>
+</div>
+
+<h3>3 · Repeater + network — worldwide reach</h3>
+<p>Connect that repeater (or a personal <span class="term">hotspot</span>) to a
+<span class="term">DMR network</span> like Brandmeister or DMR-MARC over the internet,
+and a <span class="term">talkgroup</span> can be routed to matching repeaters anywhere
+on Earth.<sup class="cite"><a href="#s4">4</a></sup> The talkgroup is the address that
+tells the network <em>who</em> should receive the voice.</p>
+<div class="flow">
+  <div class="node"><span class="n-title">Radio A</span><span class="n-sub">TG 235</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Repeater /<br>hotspot</span><span class="n-sub">internet link</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Network</span><span class="n-sub">routes by talkgroup</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Far repeater</span><span class="n-sub">→ Radio B</span></div>
+</div>
+
+<div class="callout">
+  <span class="label">The pattern</span>
+  As you move down the list, you trade simplicity for reach: <strong>direct</strong>
+  (no infra) → <strong>repeater</strong> (local infra) → <strong>network</strong>
+  (internet, global). Only road 3 already uses an IP network end-to-end.
+</div>
+
+<h2>Where your on-device bridge taps in</h2>
+<p>Here is the twist for your product. A normal DMR user needs road&nbsp;3 — a
+repeater plus an internet-linked network — to reach beyond the horizon. Your radio
+already has an IP path of its own: the <span class="term">PoC</span> stack. So the
+bridge can take a transmission off the <em>DMR</em> side (any of the three roads above)
+and carry it onward over <em>PoC</em> instead — and vice-versa — all inside one device.</p>
+<div class="flow">
+  <div class="node"><span class="n-title">DMR side</span><span class="n-sub">module: audio + TG/slot/CC</span></div>
+  <div class="arrow">→</div>
+  <div class="node tap"><span class="n-title">On-device bridge</span><span class="n-sub">map talkgroup ↔ PoC group</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">PoC side</span><span class="n-sub">your custom platform</span></div>
+</div>
+<p class="flow-caption">Your device effectively becomes the "network" for the DMR side — but the transport is your PoC platform, not Brandmeister. The bridge replaces road&nbsp;3's infrastructure with cellular/IP, and it reads the same routing metadata (talkgroup, slot, color code) to know where the voice belongs.</p>
+
+<div class="quiz" data-quiz='[
+  {"q":"Two DMR radios are talking with no repeater and no internet, straight to each other. Which road is this?","options":["Network-routed worldwide reach","Direct simplex radio to radio","Repeater-extended local range","Trunked multi-site roaming"],"answer":1,"why":"Direct/simplex: same frequency, slot and color code, line-of-sight, zero infrastructure."},
+  {"q":"What actually crosses the air in one time slot during a transmission?","options":["Raw uncompressed audio samples","The talkgroup number only","Compressed AMBE+2 voice frames","An analog frequency-modulated tone"],"answer":2,"why":"The vocoder squeezes voice to ~3600 bps of AMBE+2 frames; that compressed data is what is transmitted."},
+  {"q":"For a transmission to reach a matching talkgroup on another continent, what must be in the path?","options":["A higher color code value","Two synchronised time slots","An internet-linked DMR network","A louder transmit power level"],"answer":2,"why":"Worldwide reach needs a repeater or hotspot linked over the internet to a network that routes by talkgroup."},
+  {"q":"In the on-device bridge, what does your PoC stack effectively replace from the DMR world?","options":["The handsets own vocoder chip","The color code access control","The internet-linked network transport","The two-slot TDMA timing"],"answer":2,"why":"Your device carries the voice onward over PoC instead of a Brandmeister-style network: PoC replaces road 3's transport."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://wiki.radioreference.com/index.php/DMR">RadioReference DMR Wiki</a>
+  — skim the sections on repeaters, networks, and simplex to see the three roads described
+  independently of any one vendor. Pair it with the talkgroup pages for how routing works.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Useful follow-ups: "What latency does each road add, and how does PoC compare?",
+  "If a device bridges, can it relay for <em>other</em> radios or only cross-connect its own two stacks?",
+  or "Draw the full PoC→DMR direction with the metadata at each hop."
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0001-anatomy-of-a-dmr-channel.html">← Lesson 1</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0003-talkgroups-and-call-types.html">Next → Lesson 3: Talkgroups &amp; call types</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://www.dvsinc.com/soft_products/ambe_p2.shtml">DVSI — AMBE+2 Vocoder</a> — DMR voice codec; ~3,600 bps compressed voice frames.</li>
+    <li id="s2"><a href="https://hytera.us/resources/what-is-dmr-standard-tiers/">Hytera — DMR Standard &amp; Tiers</a> — Tier I direct/simplex, no repeater, licence-free.</li>
+    <li id="s3"><a href="https://www.dmrassociation.org/dmr-standards.html">DMR Association — DMR Standards</a> — repeater duplex; 2-slot TDMA synchronising two calls per channel.</li>
+    <li id="s4"><a href="https://news.brandmeister.network/">Brandmeister Network</a> — internet-linked master servers routing talkgroups between repeaters/hotspots worldwide.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4 — The Voice Path & Transcoding</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 04</span>
+</div>
+
+<h1>The Voice Path &amp; Transcoding</h1>
+<p class="subtitle">DMR speaks AMBE+2; your PoC platform speaks something else. The single most consequential decision in your bridge is whether those two ever have to translate.</p>
+
+<p>You now know how DMR addresses voice (<a href="0003-talkgroups-and-call-types.html">Lesson&nbsp;3</a>).
+This lesson follows the voice <em>samples</em> themselves through the bridge — because
+the format the DMR module hands your Android app decides whether your product
+sounds clean or muddy. This is the lesson to get right.</p>
+
+<h2>What DMR voice actually is</h2>
+<p>The <span class="term">vocoder</span> is DVSI <strong>AMBE+2</strong>. It packs
+speech into a <strong>30&nbsp;ms frame</strong> of 216 bits — that's 2,450&nbsp;bps of
+voice plus forward error correction, totalling <strong>3,600&nbsp;bps</strong>.<sup class="cite"><a href="#s1">1</a></sup>
+Each frame decodes back to three 20&nbsp;ms chunks of ordinary PCM audio.<sup class="cite"><a href="#s2">2</a></sup>
+Two things follow: AMBE+2 is <em>proprietary</em> (licensed from DVSI), and it's
+<em>lossy</em> — it throws away detail to hit that bitrate.</p>
+
+<h2>Transcoding — and why it hurts</h2>
+<p><span class="term">Transcoding</span> means decoding one codec to PCM and
+re-encoding into another (AMBE+2 → your PoC codec, e.g. Opus/AMR). Because each
+codec is independently lossy, chaining them compounds the damage. DVSI's own testing
+found transcoding cost <strong>&gt;12% intelligibility</strong> versus the same codec
+end-to-end, and they warn it should be avoided where possible.<sup class="cite"><a href="#s3">3</a></sup>
+Worse, the loss <em>cascades</em>: every extra transcode in the chain degrades it further.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<div class="callout">
+  <span class="label">The mental model</span>
+  Transcoding is like photocopying a photocopy. One copy is readable; copy the copy,
+  then copy that, and detail smears. Each codec hop is a copy.
+</div>
+
+<h2>The fork in your bridge: relay or transcode?</h2>
+<p>Everything hinges on what the DMR module exposes to your app at the bridge point.</p>
+
+<table class="cmp">
+  <tr><th>&nbsp;</th><th>Relay raw AMBE frames</th><th>Transcode via PCM</th></tr>
+  <tr><td>Module gives you</td><td>Raw AMBE+2 frames</td><td>Decoded PCM audio</td></tr>
+  <tr><td>PoC side must</td><td>Carry/understand AMBE+2 too</td><td>Use its own codec (Opus/AMR…)</td></tr>
+  <tr><td>Voice quality</td><td>No transcode loss</td><td>≥12% intelligibility loss per hop</td></tr>
+  <tr><td>Latency added</td><td>Minimal (just transport)</td><td>Decode + re-encode each way</td></tr>
+  <tr><td>Licensing</td><td>Needs AMBE+2 licence on PoC side</td><td>PoC side avoids AMBE licence</td></tr>
+  <tr><td>Best when</td><td>You control both endpoints' codec</td><td>PoC codec is fixed / non-AMBE</td></tr>
+</table>
+
+<div class="callout bridge-note">
+  <span class="label">Why this is yours to decide</span>
+  You own the custom PoC platform — so you get to choose its codec. That's leverage no
+  commercial gateway has. If you make the PoC side carry <strong>AMBE+2 end-to-end</strong>,
+  you can <em>relay</em> and dodge the 12% loss entirely (at the cost of an AMBE licence on
+  the PoC side and a codec most cellular stacks don't natively favour). If you'd rather use
+  a cellular-friendly codec, you accept <strong>one</strong> transcode — keep it to exactly
+  one hop, never a chain. The fork is set by one fact: <strong>does the DMR module hand
+  you PCM or raw AMBE frames?</strong> Find that out from the vendor SDK first.
+</div>
+
+<h2>Latency budget</h2>
+<p>PoC adds cellular/IP round-trip delay on top of DMR's own framing. Every transcode
+adds a decode+encode pass. For a push-to-talk feel, budget the whole chain — DMR air
+framing (30&nbsp;ms frames) + module processing + transcode (if any) + PoC network — and
+test it as a round trip, not per-stage. Relaying raw frames removes the transcode term
+from that budget entirely.</p>
+
+<div class="quiz" data-quiz='[
+  {"q":"Why does converting AMBE+2 to a different PoC codec reduce voice quality?","options":["It lowers the transmit power","Each lossy codec compounds loss","It changes the talkgroup number","It doubles the air bitrate used"],"answer":1,"why":"Both codecs are independently lossy; decoding then re-encoding compounds the damage — DVSI measured >12% intelligibility loss."},
+  {"q":"Which option avoids transcoding loss in your bridge entirely?","options":["Lowering the PoC sample rate","Relaying raw AMBE+2 frames","Adding more error correction","Using a louder audio gain"],"answer":1,"why":"If both ends speak AMBE+2 you relay the frames untouched — no decode/re-encode, no transcode loss."},
+  {"q":"What single fact determines whether your bridge must transcode at all?","options":["The repeater color code value","PCM or raw frames exposed","The talkgroup ID range used","The Android OS version number"],"answer":1,"why":"If the DMR module hands you decoded PCM you must re-encode for PoC; if it hands raw AMBE frames you can relay."},
+  {"q":"What is the trade-off of making your PoC side carry AMBE+2 end-to-end?","options":["It raises the color code limit","Needs an AMBE codec licence","It removes all network latency","It blocks Private Calls working"],"answer":1,"why":"Relaying avoids transcode loss but requires licensing AMBE+2 on the PoC side and using a codec cellular stacks dont natively favour."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://www.dvsinc.com/papers/endtoend.html">DVSI — Benefits of End-to-End Vocoder Integration</a>
+  — the vendor's own data on transcoding loss and cascading degradation. Read it before
+  you commit the bridge to a transcode-based design; it is the strongest argument for relaying.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Draw the full sample path for relay vs transcode side by side,"
+  "What would an AMBE+2-on-PoC design cost us in licensing and battery?", or
+  "If we must transcode, what one codec minimises the loss against AMBE+2?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0003-talkgroups-and-call-types.html">← Lesson 3</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0005-identity-and-networks.html">Next → Lesson 5: Identity &amp; networks</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://www.dvsinc.com/soft_products/ambe_p2.shtml">DVSI — AMBE+2 Vocoder</a> — standard DMR codec; 2,450 bps voice + FEC = 3,600 bps; proprietary/licensed.</li>
+    <li id="s2"><a href="https://dspini.com/vocoders/lowrate/dmr-lowrate/dmr-ambe-3600">DSP Innovations — DMR AMBE 3600 bps</a> — 30 ms / 216-bit frame; three 20 ms PCM sub-frames.</li>
+    <li id="s3"><a href="https://www.dvsinc.com/papers/endtoend.html">DVSI — Benefits of End-to-End Vocoder</a> — &gt;12% intelligibility loss from transcoding; advises avoiding it.</li>
+    <li id="s4"><a href="https://urgentcomm.com/">Urgent Communications — transcoding analysis</a> — cascading transcodes cause severe cumulative quality loss.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

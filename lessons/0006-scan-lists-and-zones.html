@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6 — Scan, Scan Lists & Zones</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 06</span>
+</div>
+
+<h1>Scan, Scan Lists &amp; Zones</h1>
+<p class="subtitle">How one radio listens to many things, and how hundreds of channels stay organised. The operational layer your bridge may need to emulate.</p>
+
+<p>The previous lessons covered how DMR <em>works</em>. This one covers how it's
+<em>operated</em> — the everyday ergonomics of monitoring several talkgroups and
+managing a crowded radio. These are <span class="term">code plug</span> constructs,
+not over-the-air features, but your PoC side will likely need equivalents so a
+bridged user behaves the way a DMR user expects.</p>
+
+<h2>Zones — organising the channel knob</h2>
+<p>A radio can hold hundreds of <span class="term">channels</span>. A <strong>zone</strong>
+is a named bucket of channels — typically grouped by location or purpose ("Home
+Repeaters", "Travel", "Site B") — so the operator switches context instead of
+scrolling endlessly.<sup class="cite"><a href="#s1">1</a></sup> Selecting a zone
+re-populates the channel knob with just that zone's channels.</p>
+
+<div class="flow">
+  <div class="node"><span class="n-title">Code plug</span><span class="n-sub">whole config</span></div>
+  <div class="arrow">⊃</div>
+  <div class="node"><span class="n-title">Zone</span><span class="n-sub">bucket of channels</span></div>
+  <div class="arrow">⊃</div>
+  <div class="node"><span class="n-title">Channel</span><span class="n-sub">the 4 fields</span></div>
+</div>
+<p class="flow-caption">Containment, biggest to smallest: a code plug holds zones; a zone holds channels; a channel holds the four fields from Lesson&nbsp;1.</p>
+
+<h2>Scan lists — listening to many at once</h2>
+<p>Normally a radio hears only its selected channel's traffic. A <strong>scan list</strong>
+is a set of channels the radio steps through, stopping on whichever has activity —
+so one operator can monitor several talkgroups/slots without manually switching.<sup class="cite"><a href="#s2">2</a></sup></p>
+<p>With <strong>auto-scan</strong>, selecting a channel that has a scan list attached
+starts scanning automatically; the radio lands on active traffic and resumes scanning
+when it clears.<sup class="cite"><a href="#s2">2</a></sup> Many radios also support a
+<em>priority</em> channel that's checked more often so important traffic isn't missed.</p>
+
+<div class="callout">
+  <span class="label">The distinction that trips people up</span>
+  A <strong>zone</strong> organises what you can <em>manually select</em>. A
+  <strong>scan list</strong> controls what the radio <em>monitors automatically</em>.
+  Different jobs: one is filing, the other is listening.
+</div>
+
+<div class="callout bridge-note">
+  <span class="label">For the bridge</span>
+  A DMR user who scans expects to hear <em>any</em> of several talkgroups and to have
+  one active at a time. To make a bridged PoC user feel native:
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Scan ⇄ multi-group monitoring:</strong> a PoC user mapped to a scanned set should receive all those groups, surfacing whichever is active — mirror the "stop on activity" behaviour.</li>
+    <li><strong>One talker at a time:</strong> a DMR slot carries one conversation; decide how your PoC side arbitrates if two mapped groups talk at once (priority? queue?).</li>
+    <li><strong>Zones</strong> are pure UI/organisation — they likely need no bridge logic, just a clean mapping of which channels (and thus talkgroups) are reachable.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"What is the job of a zone in a DMR radio?","options":["To monitor many talkgroups","To organise selectable channels","To compress the voice audio","To assign each Radio ID"],"answer":1,"why":"A zone is a named bucket of channels for manual selection — organisation, not monitoring."},
+  {"q":"What does a scan list actually do?","options":["Encrypts the selected channel","Issues new Radio IDs","Steps through channels for activity","Sets the repeater color code"],"answer":2,"why":"It steps through its channels and stops on whichever has traffic, so one radio monitors several at once."},
+  {"q":"Are scan lists and zones over-the-air features or code plug constructs?","options":["Over-the-air protocol features","Local code plug constructs","Network server side only","Vocoder codec settings"],"answer":1,"why":"Both live in the radios code plug; they shape operation locally and are not transmitted over the air."},
+  {"q":"For a bridged PoC user to feel like a scanning DMR user, the bridge must mainly decide what?","options":["Which AMBE licence applies","How concurrent talkers arbitrate","The 24-bit ID upper limit","Which color code to use"],"answer":1,"why":"A DMR slot carries one talker at a time, so the bridge must decide priority/queueing when multiple mapped groups are active at once."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://www.jeffreykopcak.com/2017/06/11/dmr-in-amateur-radio-programming-a-code-plug/">Jeffrey Kopcak — Programming a Code Plug</a>
+  — walks through zones, channels and scan lists in a real code plug, showing how the pieces nest.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "How should our PoC side arbitrate two simultaneous talkers on scanned groups?",
+  "Do zones need any backend representation, or are they purely client UI?", or
+  "You've covered the basics — what should I learn next for the bridge?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0005-identity-and-networks.html">← Lesson 5</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0007-interleaved-review.html">Next → Lesson 7: Interleaved review</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://www.jeffreykopcak.com/2017/06/11/dmr-in-amateur-radio-programming-a-code-plug/">Jeffrey Kopcak — Programming a Code Plug</a> — zones as named buckets of channels; code plug structure.</li>
+    <li id="s2"><a href="https://www.jeffreykopcak.com/2017/06/11/dmr-in-amateur-radio-programming-a-code-plug/">Jeffrey Kopcak — Scan Lists &amp; Auto-Scan</a> — scan lists, auto-scan, stopping on activity.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMR Glossary — Reference</title>
+<link rel="stylesheet" href="../assets/style.css">
+<style>
+  .gloss dt { font-weight: 600; margin-top: 1.1rem; }
+  .gloss dt .alias { font-weight: 400; font-style: italic; color: var(--ink-soft); font-size: 0.85rem; }
+  .gloss dd { margin: 0.2rem 0 0; }
+  .gloss .avoid { font-size: 0.8rem; color: var(--ink-soft); font-style: italic; }
+</style>
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Reference · Glossary</span>
+</div>
+
+<h1>DMR Glossary</h1>
+<p class="subtitle">The canonical vocabulary for this course. Every lesson uses these exact terms. Definitions tighten as understanding deepens.</p>
+
+<p>This glossary covers Digital Mobile Radio (DMR) as it relates to bridging DMR
+voice onto a PoC (Push-to-talk over Cellular) platform. Terms are added here only
+once they are understood — it is a record of compressed knowledge, not a dictionary.</p>
+
+<h2>Core structure</h2>
+<dl class="gloss">
+
+  <dt>DMR <span class="alias">— Digital Mobile Radio</span></dt>
+  <dd>An open digital two-way radio standard defined by ETSI (TS&nbsp;102&nbsp;361), built on 2-slot TDMA in a 12.5&nbsp;kHz channel.
+  <div class="avoid">Avoid: "digital walkie-talkie", "MOTOTRBO" (that's one vendor's brand of DMR).</div></dd>
+
+  <dt>TDMA <span class="alias">— Time Division Multiple Access</span></dt>
+  <dd>Splitting one radio frequency into repeating time slots so multiple conversations share it. DMR uses two slots.
+  <div class="avoid">Avoid: "multiplexing" (too vague).</div></dd>
+
+  <dt>Time slot <span class="alias">— TS1 / TS2</span></dt>
+  <dd>One of the two 30&nbsp;ms turns into which a DMR frequency is divided. A single frequency carries two independent conversations, one per slot.
+  <div class="avoid">Avoid: "channel" (a slot is part of a channel, not the whole).</div></dd>
+
+  <dt>Color code <span class="alias">— CC, 0–15</span></dt>
+  <dd>A number (0–15) that must match between radio and repeater for access — the digital equivalent of an analog PL/CTCSS tone. Keeps nearby systems on the same frequency from interfering.
+  <div class="avoid">Avoid: "channel ID", "encryption" (it is neither).</div></dd>
+
+  <dt>Talkgroup <span class="alias">— TG, "Group"</span></dt>
+  <dd>A numeric ID identifying a virtual group of users. Your radio only hears traffic for the talkgroups it subscribes to. The unit we map onto a PoC group.
+  <div class="avoid">Avoid: "channel", "frequency".</div></dd>
+
+  <dt>Channel</dt>
+  <dd>A saved bundle of settings the operator selects as one unit: RX frequency, TX frequency, time slot, color code, and talkgroup. Selecting a channel sets all of these at once.
+  <div class="avoid">Avoid: "frequency" (a channel is more than a frequency).</div></dd>
+
+  <dt>Call type <span class="alias">— Group / Private / All Call</span></dt>
+  <dd>Who a transmission addresses: a <em>Group Call</em> (everyone on a talkgroup), a <em>Private Call</em> (one specific Radio ID), or an <em>All Call</em> (one-way to everyone on the system).</dd>
+
+  <dt>All Call <span class="alias">— ID 16777215 (0xFFFFFF)</span></dt>
+  <dd>A one-way transmission to every radio on the system, addressed to the reserved
+  all-ones destination ID. Originated by keying a channel/contact whose TX contact is
+  that ID; restricted per-radio by what's programmed in the code plug, not by the network.
+  Radios generally always receive it regardless of their group list.
+  <div class="avoid">Avoid: "broadcast to a talkgroup" (it bypasses talkgroups entirely).</div></dd>
+
+</dl>
+
+<h2>Infrastructure</h2>
+<dl class="gloss">
+
+  <dt>Repeater</dt>
+  <dd>A fixed station that receives on one frequency and re-transmits on another to extend range. A DMR repeater synchronises both time slots, carrying two conversations at once.</dd>
+
+  <dt>Hotspot</dt>
+  <dd>A low-power personal device (often Pi-Star/MMDVM) that connects a single radio to a DMR network over the internet — a miniature repeater for the desk.</dd>
+
+  <dt>DMR network <span class="alias">— Brandmeister, DMR-MARC, DMR+</span></dt>
+  <dd>Internet-connected infrastructure that routes talkgroups between repeaters and hotspots worldwide via master servers.</dd>
+
+  <dt>Radio ID <span class="alias">— DMR ID</span></dt>
+  <dd>A unique number identifying a specific radio/operator, issued centrally by RadioID.net and used across all major networks. Addresses Private Calls.
+  The field is <strong>24-bit</strong>: values 0–16,777,215. Reserved: <code>0</code> (null) and <code>16777215</code> (All Call); usable individual IDs are ~16.7&nbsp;million. No numeric overflow is possible — the limit is address-space exhaustion, not wraparound.
+  <div class="avoid">Avoid: "callsign" (the ID is numeric and separate from any callsign).</div></dd>
+
+  <dt>Code plug</dt>
+  <dd>The complete configuration file loaded into a radio — every channel, zone, scan list, contact and setting. Contains zones, which contain channels.
+  <div class="avoid">Avoid: "firmware" (the code plug is config, not the operating software).</div></dd>
+
+  <dt>Zone</dt>
+  <dd>A named bucket of channels in the code plug (usually by location or purpose) that re-populates the channel selector when chosen. Pure organisation, not over the air.
+  <div class="avoid">Avoid: "channel group", "talkgroup" (a zone groups channels, not users).</div></dd>
+
+  <dt>Scan list</dt>
+  <dd>An operator-defined list of channels the radio steps through, stopping on whichever has activity — how a user monitors several talkgroups at once.</dd>
+
+  <dt>Tier <span class="alias">— I / II / III</span></dt>
+  <dd>DMR's three profiles: <em>Tier&nbsp;I</em> licence-free simplex; <em>Tier&nbsp;II</em> licensed conventional 2-slot repeaters (the common case for us); <em>Tier&nbsp;III</em> trunked multi-site systems.</dd>
+
+</dl>
+
+<h2>Air interface (radio ↔ repeater)</h2>
+<dl class="gloss">
+
+  <dt>Burst</dt>
+  <dd>One slot's worth of transmitted bits: 264 bits in 27.5 ms, laid out as 108-bit payload + 48-bit centre + 108-bit payload. The centre holds either a sync pattern or embedded signalling.</dd>
+
+  <dt>Voice superframe <span class="alias">— bursts A–F</span></dt>
+  <dd>Six consecutive voice bursts (A–F), 360 ms. Burst A carries the voice sync; B–F carry embedded Link Control. Speech is three 20 ms AMBE+2 frames per burst.</dd>
+
+  <dt>Voice LC header <span class="alias">— Link Control</span></dt>
+  <dd>The PDU sent before voice (and repeated in bursts B–F) announcing source Radio ID, destination talkgroup/ID, and call type (FLCO). The metadata a bridge maps to PoC.</dd>
+
+  <dt>CACH <span class="alias">— Common Announcement Channel</span></dt>
+  <dd>Signalling on the repeater's outbound stream, interleaved between slots, telling radios whether each slot is busy/idle and which slot is which — without decoding voice.</dd>
+
+  <dt>Admit criterion <span class="alias">— Always / Channel Free / Color Code Free</span></dt>
+  <dd>The politeness rule a radio checks before keying. "Color Code Free" (key only if the matching repeater's slot is idle) is the recommended repeater setting. The closest thing to access control — a filter, not a handshake.</dd>
+
+  <dt>Hang time</dt>
+  <dd>The brief window after a transmission in which the repeater keeps the slot + talkgroup reserved so the same conversation can continue. Per-slot.</dd>
+
+  <dt>Late entry</dt>
+  <dd>Recovering a call's identity after tuning in mid-transmission, because the Link Control is repeated in every superframe (≤360 ms to recover).</dd>
+
+</dl>
+
+<h2>Voice &amp; bridging</h2>
+<dl class="gloss">
+
+  <dt>Vocoder / AMBE+2</dt>
+  <dd>The proprietary codec (DVSI AMBE+2) that compresses DMR voice to ~3,600&nbsp;bps. Decoding/re-encoding it to a cellular codec is <em>transcoding</em>.</dd>
+
+  <dt>Transcoding</dt>
+  <dd>Converting voice from one codec to another (e.g. AMBE+2&nbsp;→&nbsp;cellular AMR/Opus). Each conversion loses quality — measured at &gt;12% intelligibility loss in one DVSI study — so it is the central fidelity risk for our bridge.</dd>
+
+  <dt>Gateway / bridge</dt>
+  <dd>Infrastructure that connects DMR to another system (analog, another DMR network, or — for us — a PoC platform), routing talkgroups and converting voice as needed.</dd>
+
+  <dt>PoC <span class="alias">— Push-to-talk over Cellular</span></dt>
+  <dd>Walkie-talkie-style voice carried over cellular/IP data rather than radio RF. The platform our product bridges DMR into.</dd>
+
+</dl>
+
+<p class="sources"><strong>Backing sources:</strong> DMR Association; ETSI TS&nbsp;102&nbsp;361-1; RadioReference DMR Wiki; DVSI AMBE+2 &amp; end-to-end vocoder papers; RadioID.net. Full annotations in <code>RESOURCES.md</code>.</p>
+
+<div class="nav-links">
+  <a href="../lessons/0001-anatomy-of-a-dmr-channel.html">→ Lesson 1: Anatomy of a DMR Channel</a>
+</div>
+</body>
+</html>

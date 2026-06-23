@@ -1,0 +1,156 @@
+/* Shared course stylesheet — DMR Radio Basics
+   Tufte-inspired: generous margins, readable serif body, sober palette.
+   Every lesson and reference doc links this file so the course feels like one book. */
+
+:root {
+  --ink: #1a1a1a;
+  --ink-soft: #4a4a4a;
+  --paper: #fdfcf8;
+  --rule: #d8d4c8;
+  --accent: #8a1c1c;        /* deep radio-red, used sparingly */
+  --accent-soft: #f3e7e7;
+  --slot1: #1f5673;          /* time slot 1 */
+  --slot2: #b5651d;          /* time slot 2 */
+  --code-bg: #f1efe7;
+  --maxw: 42rem;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: 18px; }
+
+body {
+  margin: 0 auto;
+  max-width: var(--maxw);
+  padding: 4rem 1.6rem 6rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- masthead --- */
+.masthead {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.6rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.masthead .course { font-variant: small-caps; letter-spacing: 0.08em; color: var(--ink-soft); font-size: 0.8rem; }
+.masthead .lesson-no { font-size: 0.8rem; color: var(--accent); font-variant: small-caps; letter-spacing: 0.08em; }
+
+h1 { font-size: 1.9rem; line-height: 1.15; margin: 0 0 0.3rem; font-weight: 600; }
+.subtitle { color: var(--ink-soft); font-style: italic; margin: 0 0 2rem; font-size: 1.05rem; }
+
+h2 { font-size: 1.25rem; margin: 2.4rem 0 0.6rem; font-weight: 600; border-bottom: 1px solid var(--rule); padding-bottom: 0.2rem; }
+h3 { font-size: 1.05rem; margin: 1.6rem 0 0.4rem; font-weight: 600; font-variant: small-caps; letter-spacing: 0.03em; }
+
+p { margin: 0.8rem 0; }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+a:hover { border-bottom-color: var(--accent); }
+
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+/* --- callouts --- */
+.callout {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+  padding: 0.8rem 1.1rem;
+  margin: 1.4rem 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.97rem;
+}
+.callout .label { font-variant: small-caps; letter-spacing: 0.06em; font-weight: 600; color: var(--accent); font-size: 0.8rem; display: block; margin-bottom: 0.2rem; }
+
+.bridge-note { border-left-color: var(--slot1); background: #eaf1f5; }
+.bridge-note .label { color: var(--slot1); }
+
+/* --- key term inline --- */
+.term { font-variant: small-caps; letter-spacing: 0.02em; font-weight: 600; }
+
+/* --- citations --- */
+sup.cite { font-size: 0.68rem; }
+sup.cite a { border: none; }
+.sources { font-size: 0.82rem; color: var(--ink-soft); margin-top: 2.5rem; border-top: 1px solid var(--rule); padding-top: 0.8rem; }
+.sources ol { margin: 0.3rem 0; padding-left: 1.3rem; }
+.sources li { margin: 0.2rem 0; }
+
+/* --- code / config blocks --- */
+code, .mono { font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace; font-size: 0.86em; }
+pre, .config {
+  background: var(--code-bg);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 0.9rem 1.1rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* --- channel-card: the four fields of a DMR channel --- */
+.channel-card { border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; margin: 1.4rem 0; }
+.channel-card .cc-head { background: var(--ink); color: var(--paper); padding: 0.4rem 0.9rem; font-variant: small-caps; letter-spacing: 0.06em; font-size: 0.85rem; }
+.channel-card table { width: 100%; border-collapse: collapse; }
+.channel-card td { padding: 0.5rem 0.9rem; border-top: 1px solid var(--rule); vertical-align: top; }
+.channel-card td.k { font-variant: small-caps; letter-spacing: 0.03em; color: var(--ink-soft); width: 38%; }
+.channel-card td.v { font-family: "SF Mono", Menlo, monospace; font-size: 0.85rem; }
+
+/* --- slot diagram --- */
+.slots { display: flex; margin: 1.2rem 0; border-radius: 5px; overflow: hidden; border: 1px solid var(--rule); font-size: 0.82rem; }
+.slots .slot { flex: 1; padding: 0.7rem 0.6rem; color: #fff; text-align: center; }
+.slots .s1 { background: var(--slot1); }
+.slots .s2 { background: var(--slot2); }
+.slots .slot small { display: block; opacity: 0.85; font-size: 0.72rem; margin-top: 0.2rem; }
+
+/* --- flow / journey diagram (reusable across lessons) --- */
+.flow { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin: 1.3rem 0; font-size: 0.82rem; }
+.flow .node { flex: 1 1 0; min-width: 5.5rem; background: #fff; border: 1px solid var(--rule); border-radius: 5px; padding: 0.6rem 0.5rem; text-align: center; }
+.flow .node .n-title { font-weight: 600; display: block; }
+.flow .node .n-sub { color: var(--ink-soft); font-size: 0.72rem; display: block; margin-top: 0.15rem; }
+.flow .arrow { align-self: center; padding: 0 0.45rem; color: var(--accent); font-weight: 700; }
+.flow .node.tap { border-color: var(--slot1); border-width: 2px; background: #eaf1f5; }
+.flow .node.tap .n-title { color: var(--slot1); }
+.flow-caption { font-size: 0.8rem; color: var(--ink-soft); margin-top: -0.4rem; }
+
+/* --- comparison table (reusable) --- */
+table.cmp { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.9rem; }
+table.cmp th, table.cmp td { text-align: left; padding: 0.5rem 0.7rem; border: 1px solid var(--rule); vertical-align: top; }
+table.cmp th { background: var(--ink); color: var(--paper); font-variant: small-caps; letter-spacing: 0.04em; font-weight: 600; }
+table.cmp td:first-child { font-weight: 600; background: var(--code-bg); }
+table.cmp tr:nth-child(even) td:not(:first-child) { background: #faf8f1; }
+
+/* --- footer nav + reminders --- */
+.lesson-footer { margin-top: 3rem; border-top: 2px solid var(--ink); padding-top: 1rem; }
+.ask-teacher { background: #eef3ec; border: 1px dashed #6b8f6b; border-radius: 5px; padding: 0.8rem 1.1rem; margin: 1.6rem 0; font-size: 0.95rem; }
+.ask-teacher .label { font-variant: small-caps; font-weight: 600; color: #3f6b3f; letter-spacing: 0.05em; }
+.nav-links { display: flex; gap: 1.4rem; flex-wrap: wrap; font-size: 0.9rem; margin-top: 1rem; }
+
+/* --- primary source highlight --- */
+.primary-source { background: #fbf6e9; border: 1px solid #e3d6a8; border-radius: 5px; padding: 0.8rem 1.1rem; margin: 1.4rem 0; font-size: 0.95rem; }
+.primary-source .label { font-variant: small-caps; font-weight: 600; color: #8a6d1c; letter-spacing: 0.05em; display: block; margin-bottom: 0.2rem; font-size: 0.8rem; }
+
+/* --- quiz widget (see assets/quiz.js) --- */
+.quiz { border: 1px solid var(--rule); border-radius: 6px; padding: 0.4rem 1.1rem 1.1rem; margin: 1.8rem 0; background: #fff; }
+.quiz-head { font-variant: small-caps; letter-spacing: 0.08em; font-weight: 600; color: var(--accent); border-bottom: 1px solid var(--rule); padding: 0.6rem 0; margin-bottom: 0.6rem; font-size: 0.85rem; }
+.quiz-q { margin: 1.1rem 0; }
+.quiz-prompt { margin: 0 0 0.5rem; }
+.quiz-options { display: flex; flex-direction: column; gap: 0.4rem; }
+.quiz-opt { text-align: left; font: inherit; font-size: 0.92rem; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 0.5rem 0.8rem; cursor: pointer; transition: background 0.12s, border-color 0.12s; }
+.quiz-opt:hover { border-color: var(--ink-soft); background: #f7f5ee; }
+.quiz-opt.correct { background: #e4f0e4; border-color: #6b8f6b; }
+.quiz-opt.wrong { background: #f6e4e4; border-color: var(--accent); }
+.quiz-why { margin-top: 0.6rem; font-size: 0.9rem; color: var(--ink-soft); background: var(--code-bg); border-radius: 4px; padding: 0.5rem 0.8rem; }
+.quiz-why .ok { color: #3f6b3f; font-weight: 600; }
+.quiz-why .no { color: var(--accent); font-weight: 600; }
+
+@media print {
+  body { max-width: none; padding: 1rem; font-size: 11pt; background: #fff; }
+  .ask-teacher, .nav-links { display: none; }
+  a { color: var(--ink); border: none; }
+}

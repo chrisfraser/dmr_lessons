@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1 — Anatomy of a DMR Channel</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 01</span>
+</div>
+
+<h1>The Anatomy of a DMR Channel</h1>
+<p class="subtitle">Four settings define every DMR conversation. Read them, and you can read the radio — and know exactly what your bridge has to honour.</p>
+
+<p>Newcomers picture a radio "channel" as a frequency — one dial, one conversation.
+DMR breaks that picture. On DMR, a single <span class="term">channel</span> is a
+<strong>bundle of four settings</strong>, and a single frequency carries
+<strong>two conversations at once</strong>. Get this one idea straight and most of
+DMR falls into place.</p>
+
+<h2>One frequency, two conversations</h2>
+<p>DMR uses <span class="term">TDMA</span> — it chops the frequency into two
+repeating 30&nbsp;ms turns called <span class="term">time slots</span>,
+<strong>TS1</strong> and <strong>TS2</strong>. Two completely separate groups can
+talk on the same frequency at the same time, each owning one slot.<sup class="cite"><a href="#s1">1</a></sup>
+That is why DMR doubles the capacity of a 12.5&nbsp;kHz analog channel.<sup class="cite"><a href="#s2">2</a></sup></p>
+
+<div class="slots">
+  <div class="slot s1">Time Slot 1<small>Group A talking — e.g. wide-area talkgroup</small></div>
+  <div class="slot s2">Time Slot 2<small>Group B talking — e.g. local talkgroup</small></div>
+</div>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-top:-0.4rem;">Same frequency. Same instant. Two independent conversations, interleaved 30&nbsp;ms at a time.</p>
+
+<h2>The four fields of a channel</h2>
+<p>When an operator turns the knob to a channel, the radio loads all four of these
+together. Miss one and you either can't be heard, or you're heard by the wrong people.</p>
+
+<div class="channel-card">
+  <div class="cc-head">Channel: "Town Repeater — Local"</div>
+  <table>
+    <tr><td class="k">RX frequency</td><td class="v">439.4000 MHz &nbsp;<span style="font-family:inherit;color:var(--ink-soft);font-size:0.8rem;">— what you listen on</span></td></tr>
+    <tr><td class="k">TX frequency</td><td class="v">431.4000 MHz &nbsp;<span style="font-family:inherit;color:var(--ink-soft);font-size:0.8rem;">— what you transmit on (offset, for the repeater)</span></td></tr>
+    <tr><td class="k">Time slot</td><td class="v">TS2 &nbsp;<span style="font-family:inherit;color:var(--ink-soft);font-size:0.8rem;">— which of the two turns you use</span></td></tr>
+    <tr><td class="k">Color code</td><td class="v">1 &nbsp;<span style="font-family:inherit;color:var(--ink-soft);font-size:0.8rem;">— must match the repeater to get in</span></td></tr>
+    <tr><td class="k">Talkgroup</td><td class="v">TG 235 &nbsp;<span style="font-family:inherit;color:var(--ink-soft);font-size:0.8rem;">— which virtual group you join</span></td></tr>
+  </table>
+</div>
+
+<h3>What each one does</h3>
+<p><strong>RX / TX frequency.</strong> Through a <span class="term">repeater</span>,
+you listen and transmit on <em>different</em> frequencies (a duplex offset); the
+repeater hears you on one and re-broadcasts on the other to extend range.<sup class="cite"><a href="#s2">2</a></sup></p>
+
+<p><strong>Time slot (TS1 / TS2).</strong> Which of the two conversations you join.
+The repeater's operator decides what each slot is for — a common convention is
+wide-area/worldwide talkgroups on TS1, local/regional on TS2.<sup class="cite"><a href="#s3">3</a></sup>
+Pick the wrong slot and you transmit into a turn nobody you want is listening to.</p>
+
+<p><strong>Color code (0–15).</strong> A digital "key" for the repeater — the
+equivalent of the PL/CTCSS tone on analog. Your color code must match the
+repeater's or it ignores you. It stops a second nearby system on the same
+frequency from interfering.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<p><strong>Talkgroup.</strong> A numeric ID for a <em>virtual</em> group of users.
+Your radio only un-mutes for the talkgroups it's set to hear. This is the layer
+that decides <em>who</em> is in the conversation, independent of frequency.<sup class="cite"><a href="#s3">3</a></sup></p>
+
+<div class="callout">
+  <span class="label">The mental model</span>
+  <strong>Frequency + Time slot</strong> = the physical pipe (which carrier, which turn).
+  <strong>Color code</strong> = the lock on that pipe.
+  <strong>Talkgroup</strong> = the address label on the voice flowing through it.
+</div>
+
+<div class="callout bridge-note">
+  <span class="label">Why this matters for our bridge</span>
+  Our DMR↔PoC bridge sits at the network end of this pipe. To route a DMR
+  transmission to the right PoC group, it must read the <strong>talkgroup</strong>
+  (the "who") — and to send voice back the other way it must stamp outgoing audio
+  with the correct <strong>talkgroup, time slot, and color code</strong> for the
+  target repeater. All four fields are routing metadata our product has to carry,
+  not just the audio. The talkgroup is the field we'll most likely map onto a PoC group.
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"A user is transmitting but the right people never hear them, even though their radio shows full signal into the repeater. Which single field is the most likely culprit?","options":["The transmit power setting","The time slot or talkgroup","The microphone gain level","The battery charge state"],"answer":1,"why":"Frequency + color code being right means they reach the repeater; being unheard points to landing in the wrong slot or addressing the wrong talkgroup."},
+  {"q":"What lets one DMR frequency carry two separate conversations at the same time?","options":["Two color codes per radio","Higher transmit wattage levels","TDMA splitting it into slots","A wider bandwidth channel"],"answer":2,"why":"TDMA interleaves two 30 ms time slots, TS1 and TS2, on the one carrier."},
+  {"q":"Which field is the closest digital equivalent of an analog PL/CTCSS tone?","options":["The talkgroup number","The time slot number","The color code value","The receive frequency"],"answer":2,"why":"The color code (0-15) must match the repeater to gain access, exactly like a PL tone gates an analog repeater."},
+  {"q":"For routing DMR voice to the correct PoC group, which field most directly identifies the intended group of people?","options":["The color code value","The talkgroup number","The transmit frequency","The time slot number"],"answer":1,"why":"The talkgroup is the virtual group address; it is the natural thing to map onto a PoC group."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://www.dmr-marc.net/media/Amateur_Radio_Guide_to_DMR_Rev_I_20150510.pdf">Amateur Radio Guide to DMR (W2XAB)</a>
+  — the clearest plain-English primer on channels, slots, color codes and talkgroups.
+  Read pp.&nbsp;1–10 for the concepts in this lesson; skip the vendor-specific programming steps for now.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Anything unclear? Ask follow-ups in the chat. Good ones to push on:
+  "Walk me through what happens on the air when two people key up on the same frequency
+  but different slots," or "Show me where in our bridge each of these four fields would live."
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="../reference/glossary.html">Glossary (reference)</a>
+    <a href="0002-how-a-transmission-travels.html">Next → Lesson 2: How a transmission travels</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://wiki.radioreference.com/index.php/DMR">RadioReference DMR Wiki</a> — 2-slot TDMA, 30 ms time slots, two simultaneous conversations.</li>
+    <li id="s2"><a href="https://www.dmrassociation.org/dmr-standards.html">DMR Association — DMR Standards</a> — 2-slot TDMA in 12.5 kHz; two independent calls per channel; repeater duplex.</li>
+    <li id="s3"><a href="https://www.repeaterbook.com/wiki/doku.php?id=dmr">RepeaterBook DMR Wiki</a> — talkgroups, slot conventions (wide-area vs local), channel fields.</li>
+    <li id="s4"><a href="https://www.buytwowayradios.com/blog/2026/02/understanding-color-codes-on-dmr-digital-two-way-radios.html">Buy Two Way Radios — Understanding Color Codes</a> — color code 0–15, PL/CTCSS analogy, repeater access.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3 — Talkgroups & Call Types</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 03</span>
+</div>
+
+<h1>Talkgroups &amp; Call Types</h1>
+<p class="subtitle">The talkgroup is the address on the voice. Master how DMR decides who hears whom, and the DMR↔PoC group mapping designs itself.</p>
+
+<p>In <a href="0002-how-a-transmission-travels.html">Lesson&nbsp;2</a> you saw that a
+network routes voice <em>by talkgroup</em>. This lesson opens that idea up: what a
+<span class="term">talkgroup</span> actually is, the three <span class="term">call
+types</span>, and how a radio decides what to un-mute for. This is the layer your
+bridge translates into PoC groups.</p>
+
+<h2>Talkgroup = a virtual address, not a frequency</h2>
+<p>A talkgroup is just a <strong>number</strong> (e.g. TG&nbsp;91 "Worldwide",
+TG&nbsp;3100 "US Nationwide", a club's TG&nbsp;235) that names a group of users.<sup class="cite"><a href="#s1">1</a></sup>
+Voice tagged with a talkgroup reaches every radio currently listening for that
+number — regardless of which repeater or frequency they're on. Frequency is the
+pipe; the talkgroup is the address label on what flows through it.</p>
+
+<h2>The three call types</h2>
+<p>Every DMR transmission is addressed as one of three <span class="term">call types</span>:<sup class="cite"><a href="#s2">2</a></sup></p>
+
+<div class="channel-card">
+  <div class="cc-head">Who a transmission addresses</div>
+  <table>
+    <tr><td class="k">Group Call</td><td class="v" style="font-family:inherit;">→ everyone listening to a <strong>talkgroup</strong>. Many-to-many. The everyday case.</td></tr>
+    <tr><td class="k">Private Call</td><td class="v" style="font-family:inherit;">→ one specific <strong>Radio ID</strong>. One-to-one, like a direct call.</td></tr>
+    <tr><td class="k">All Call</td><td class="v" style="font-family:inherit;">→ <strong>everyone</strong> on the system, one-way. Rare; mostly commercial dispatch.</td></tr>
+  </table>
+</div>
+
+<p>Group Calls are addressed by <em>talkgroup number</em>; Private Calls by an
+individual's <span class="term">Radio&nbsp;ID</span> (the unique per-radio number from
+RadioID.net).<sup class="cite"><a href="#s3">3</a></sup> So "who receives this" is
+answered by either a talkgroup (a group) or a Radio ID (a person).</p>
+
+<h2>How a radio decides what to un-mute</h2>
+<p>A radio doesn't hear every talkgroup on a slot — only the ones it's set to. Two mechanisms:<sup class="cite"><a href="#s1">1</a></sup></p>
+<ul>
+  <li><strong>Static talkgroups</strong> — permanently subscribed in the radio's
+  receive group list (and often kept "always on" at the repeater). Always audible.</li>
+  <li><strong>Dynamic talkgroups</strong> — temporarily activated by <em>transmitting</em>
+  to one; the network routes it to you for a short timeout, then drops it.</li>
+</ul>
+
+<div class="callout">
+  <span class="label">Putting it together</span>
+  A transmission carries: <strong>call type</strong> + <strong>destination</strong>
+  (talkgroup number for Group, Radio ID for Private) + the channel's
+  <strong>time slot</strong> and <strong>color code</strong>. A radio plays it only
+  if that destination is in its receive list on that slot.
+</div>
+
+<h2>Mapping DMR talkgroups onto your PoC groups</h2>
+<p>This is the design payoff. Your bridge reads the DMR destination and translates
+it to your PoC platform's grouping — and you own the PoC side, so you choose the
+scheme. The clean correspondence:</p>
+
+<div class="flow">
+  <div class="node"><span class="n-title">DMR Group Call</span><span class="n-sub">talkgroup #</span></div>
+  <div class="arrow">↔</div>
+  <div class="node tap"><span class="n-title">Bridge map</span><span class="n-sub">TG ⇄ PoC group</span></div>
+  <div class="arrow">↔</div>
+  <div class="node"><span class="n-title">PoC group</span><span class="n-sub">your platform</span></div>
+</div>
+
+<div class="callout bridge-note">
+  <span class="label">Design decisions this forces</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Group calls</strong> map naturally: each DMR talkgroup ⇄ one PoC group. A lookup table you control.</li>
+    <li><strong>Private calls</strong> need an identity map: DMR <em>Radio ID</em> ⇄ a PoC user. Decide if v1 supports them at all.</li>
+    <li><strong>Direction matters:</strong> PoC→DMR must stamp outgoing voice with the right talkgroup, slot <em>and</em> color code for the target repeater — the PoC side carries none of those natively, so your map must supply them.</li>
+    <li><strong>Static vs dynamic:</strong> decide whether a PoC group is always bridged to its talkgroup, or only activated on demand (mirrors DMR's static/dynamic behaviour).</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"A DMR transmission needs to reach one specific person, not a group. Which call type and destination is used?","options":["Group Call to a talkgroup","All Call to every radio","Private Call to a Radio ID","Group Call to a Radio ID"],"answer":2,"why":"Private Call is one-to-one, addressed by the individuals unique Radio ID."},
+  {"q":"What fundamentally is a talkgroup?","options":["A transmit and receive frequency","A numeric address for a group","A vocoder compression setting","A repeater hardware identifier"],"answer":1,"why":"It is just a number naming a virtual group; voice tagged with it reaches all radios listening for that number, on any frequency."},
+  {"q":"A radio is on the correct slot and color code but stays silent during a talkgroups traffic. Most likely why?","options":["Its color code is wrong","That talkgroup isnt subscribed","The repeater is powered off","Its transmit power too low"],"answer":1,"why":"A radio only un-mutes for talkgroups in its receive list (static) or recently keyed (dynamic); otherwise it ignores them."},
+  {"q":"For the PoC→DMR direction, what must your bridge add that the PoC side does not carry?","options":["The AMBE vocoder licence","Talkgroup, slot and color code","A louder audio gain stage","A second internet connection"],"answer":1,"why":"PoC voice has no DMR routing metadata; the bridge map must supply talkgroup, time slot and color code for the target repeater."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://www.dmr-marc.net/media/Amateur_Radio_Guide_to_DMR_Rev_I_20150510.pdf">Amateur Radio Guide to DMR (W2XAB)</a>
+  — the talkgroup and "receive group list" sections show static vs dynamic subscription
+  in practice, and how talkgroups sit on time slots.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Sketch a concrete TG⇄PoC-group mapping table for a 3-talkgroup deployment,"
+  "How should dynamic talkgroups behave when bridged to an always-on PoC group?",
+  or "Do we even want Private Calls in v1, and what breaks if we skip them?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0002-how-a-transmission-travels.html">← Lesson 2</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0004-voice-path-and-transcoding.html">Next → Lesson 4: The voice path &amp; transcoding</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://www.repeaterbook.com/wiki/doku.php?id=dmr">RepeaterBook DMR Wiki</a> — talkgroups as numeric groups; static vs dynamic; slot conventions.</li>
+    <li id="s2"><a href="https://rtsystems.freshdesk.com/support/solutions/articles/72000614205-contact-group-call-private-call-all-call-which-to-use">RT Systems — Group / Private / All Call</a> — the three call types and who each addresses.</li>
+    <li id="s3"><a href="https://radioid.net/">RadioID.net</a> — unique per-radio DMR IDs used to address Private Calls across networks.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

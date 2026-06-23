@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5 — Identity & Networks</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 05</span>
+</div>
+
+<h1>Identity &amp; Networks</h1>
+<p class="subtitle">Who is this radio, and what infrastructure carries it? The two questions that tell your bridge whom to map and which DMR world it lives in.</p>
+
+<p>You can now read a channel, follow a transmission, route by talkgroup, and reason
+about the codec. The last foundation is <em>identity and infrastructure</em>: how a
+specific radio is named, and the spectrum of networks — from a single hotspot to
+worldwide systems — that your PoC platform stands in for.</p>
+
+<h2>Radio ID — the name of a radio</h2>
+<p>Every DMR radio carries a unique <span class="term">Radio ID</span> (DMR ID), a
+number issued centrally by <strong>RadioID.net</strong> — the single source since 2018,
+used across Brandmeister, DMR-MARC and DMR+ alike.<sup class="cite"><a href="#s1">1</a></sup>
+It's what a <span class="term">Private Call</span> is addressed to, and what shows up
+as "who is talking" on the receiving radio. A hotspot gets the operator's 7-digit ID
+plus two digits (e.g. <code>1234567&nbsp;01</code>).<sup class="cite"><a href="#s2">2</a></sup></p>
+
+<div class="callout bridge-note">
+  <span class="label">For the bridge</span>
+  The Radio ID is your join key. Just as talkgroups map to PoC groups, <strong>Radio IDs
+  map to PoC users/identities</strong>. Keep a table: DMR ID ⇄ PoC user. You'll need it
+  for Private Calls and for showing "who's speaking" correctly on the PoC side.
+</div>
+
+<h2>The three Tiers — which DMR world you're in</h2>
+<p>DMR ships in three profiles. Knowing which one your deployment targets sets your
+expectations for repeaters, slots and trunking.<sup class="cite"><a href="#s3">3</a></sup></p>
+
+<table class="cmp">
+  <tr><th>Tier</th><th>What it is</th><th>Relevance to us</th></tr>
+  <tr><td>Tier I</td><td>Licence-free, low power, direct/simplex only — no repeaters</td><td>Edge case: radio-to-radio with no infra</td></tr>
+  <tr><td>Tier II</td><td>Licensed conventional 2-slot repeaters; group/private calls, text, encryption</td><td><strong>The common case — design for this</strong></td></tr>
+  <tr><td>Tier III</td><td>Trunked, multi-site, dynamic channel allocation, roaming</td><td>Out of scope for v1; note the exception exists</td></tr>
+</table>
+
+<h2>The infrastructure ladder</h2>
+<p>From smallest to largest, the things that carry DMR beyond a single radio:</p>
+<div class="flow">
+  <div class="node"><span class="n-title">Hotspot</span><span class="n-sub">personal, 1 radio</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Repeater</span><span class="n-sub">local/regional</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Network</span><span class="n-sub">Brandmeister / MARC</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Reflector</span><span class="n-sub">talkgroup meeting room</span></div>
+</div>
+<ul>
+  <li><strong>Hotspot</strong> — a low-power personal device (Pi-Star/MMDVM) linking one radio to a network over the internet; a repeater shrunk to desk size.<sup class="cite"><a href="#s4">4</a></sup></li>
+  <li><strong>Network</strong> — internet master servers (Brandmeister, DMR-MARC, DMR+) that route talkgroups between all connected repeaters and hotspots.<sup class="cite"><a href="#s2">2</a></sup></li>
+  <li><strong>Reflector</strong> — a "room" radios/repeaters connect to so everyone linked hears everyone; an alternative way to group traffic alongside talkgroups.</li>
+</ul>
+
+<div class="callout bridge-note">
+  <span class="label">Where your product sits</span>
+  Recall from <a href="0002-how-a-transmission-travels.html">Lesson&nbsp;2</a>: your on-device
+  bridge replaces the <em>network</em> rung of this ladder with your PoC platform. You're not
+  joining Brandmeister — you're the alternative transport. That means you also own the
+  equivalents of its identity registry (Radio ID ⇄ PoC user) and its routing table
+  (talkgroup ⇄ PoC group). Design for <strong>Tier II</strong> behaviour and you cover the
+  vast majority of real deployments.
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"What is a DMR Radio ID used to address?","options":["A specific talkgroups members","A single specific radio","A repeaters color code","An entire network at once"],"answer":1,"why":"The Radio ID uniquely names one radio/operator and is the destination of a Private Call."},
+  {"q":"Which Tier should your bridge primarily be designed around?","options":["Tier I licence-free simplex","Tier II conventional repeaters","Tier III trunked multi-site","All three tiers equally now"],"answer":1,"why":"Tier II (licensed conventional 2-slot repeaters) is the common real-world case; Tier I is an edge case and Tier III is out of scope for v1."},
+  {"q":"Where does RadioID.net sit in the DMR ecosystem?","options":["It routes voice talkgroups","Single source of Radio IDs","It licenses the AMBE codec","It manufactures the hotspots"],"answer":1,"why":"Since 2018 RadioID.net is the single central issuer of DMR IDs used across Brandmeister, DMR-MARC and DMR+."},
+  {"q":"In the infrastructure ladder, what does your on-device bridge stand in for?","options":["The handsets vocoder chip","The internet network rung","The repeaters duplex offset","The color code access gate"],"answer":1,"why":"Your PoC platform replaces the network transport rung, so you also own the identity and routing tables that a network would normally hold."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://radioid.net/">RadioID.net</a> — see how IDs are issued and structured (and the
+  hotspot suffix convention). Pair with the <a href="https://hytera.us/resources/what-is-dmr-standard-tiers/">Hytera Tiers guide</a>
+  for a clean Tier I/II/III breakdown.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Sketch the identity + routing tables our PoC backend needs to be a DMR network,"
+  "Do we ever need reflectors, or do talkgroups cover us?", or
+  "What changes if a customer is actually on a Tier III trunked system?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0004-voice-path-and-transcoding.html">← Lesson 4</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0006-scan-lists-and-zones.html">Next → Lesson 6: Scan, scan lists &amp; zones</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://radioid.net/">RadioID.net</a> — single central issuer of DMR IDs since 2018, used across all major networks.</li>
+    <li id="s2"><a href="https://news.brandmeister.network/">Brandmeister Network</a> — master-server routing; hotspot ID suffix convention.</li>
+    <li id="s3"><a href="https://hytera.us/resources/what-is-dmr-standard-tiers/">Hytera — DMR Standard &amp; Tiers</a> — Tier I/II/III definitions and use cases.</li>
+    <li id="s4"><a href="https://forum.pistar.uk/">Pi-Star</a> — MMDVM hotspot linking one radio to a DMR network over the internet.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
