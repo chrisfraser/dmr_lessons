@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 10 — Stun, Kill & Revive</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 10</span>
+</div>
+
+<h1>Stun, Kill &amp; Revive</h1>
+<p class="subtitle">Remotely disabling a radio. The feature is real and widely used — but where it lives in the stack (spec? firmware? app?) is the part that decides whether your bridge can ever touch it.</p>
+
+<p>You asked the sharp question directly: is this in the spec, on the module, or
+application-side? The honest answer is <strong>all three layers at once</strong>, and
+which matters depends on the DMR tier. Let's separate them cleanly, because product
+claims and security posture both hinge on getting this right.</p>
+
+<h2>What the three commands mean</h2>
+<table class="cmp">
+  <tr><th>Command</th><th>Effect</th><th>Recovery</th></tr>
+  <tr><td>Stun <span style="font-weight:400;font-size:0.8rem;color:var(--ink-soft);">(Radio Disable / Inhibit)</span></td><td>Radio stops normal TX/RX, won't power up normally; often still trackable/monitorable</td><td><strong>Revivable over the air</strong></td></tr>
+  <tr><td>Kill <span style="font-weight:400;font-size:0.8rem;color:var(--ink-soft);">(Permanent Disable)</span></td><td>Disables everything except power on/off — for confirmed-stolen radios</td><td><strong>Terminal</strong> — depot / CPS reprogram, <em>not</em> OTA</td></tr>
+  <tr><td>Revive <span style="font-weight:400;font-size:0.8rem;color:var(--ink-soft);">(Radio Enable / Uninhibit)</span></td><td>Re-enables a <em>stunned</em> radio</td><td>n/a — it <em>is</em> the recovery</td></tr>
+</table>
+<p>The key relationship: <strong>revive undoes a stun, never a kill.</strong> Vendors
+name these inconsistently — Motorola says "Radio Disable / Enable" for the recoverable
+pair and reserves true "Kill" for its Capacity Max trunked tier; Hytera markets the full
+"Stun / Revive / Kill" trio.<sup class="cite"><a href="#s1">1</a></sup></p>
+
+<h2>Layer 1 — Is it in the ETSI standard?</h2>
+<p>This is the distinction to burn in, because it splits by tier:</p>
+<div class="callout">
+  <span class="label">Standard vs vendor-specific</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Tier III (trunked) — standardized.</strong> ETSI <strong>TS&nbsp;102&nbsp;361-4</strong> defines explicit <em>MS Stun / Revive / Kill</em> procedures, each <strong>with and without authentication</strong>.<sup class="cite"><a href="#s2">2</a></sup></li>
+    <li><strong>Conventional / Tier II (the common case) — manufacturer-specific.</strong> The "Radio Disable/Enable" your MOTOTRBO or Hytera radios use rides as a <em>manufacturer CSBK under a Feature ID (FID)</em>, not a standardized PDU.<sup class="cite"><a href="#s3">3</a></sup></li>
+  </ul>
+</div>
+<p>That FID byte is why <strong>interoperability isn't guaranteed</strong>: FID&nbsp;0 is
+standard/DMRA-common, 0x10 is Motorola, 0x68/0x08 is Hytera. A Motorola-format stun will
+generally <em>not</em> disable a Hytera radio on a conventional system, and vice-versa.<sup class="cite"><a href="#s3">3</a></sup>
+"Stun/kill is part of DMR" is only true for Tier III — say so precisely in any product claim.</p>
+
+<h2>Layer 2 — Enforced on the module (firmware)</h2>
+<p>Whatever the origin, the <strong>target radio disables <em>itself</em></strong>. The
+command is just an individually-addressed message; the radio's own firmware is what acts
+on it. Critically, this is gated in the codeplug: a <strong>"Radio Disable Decode"</strong>
+option can be turned <strong>off</strong>, after which the radio <em>ignores all disable
+commands</em>.<sup class="cite"><a href="#s4">4</a></sup> No decode support → the command
+does nothing. So enforcement is entirely a firmware/config property of the target.</p>
+
+<h2>Layer 3 — Originated by an application (or a supervisor radio)</h2>
+<p>The sender is typically a <strong>dispatch / console application</strong> (RDAC,
+SmartPTT, TRBOnet, via a control station) or another <strong>radio whose keypad signalling
+is enabled</strong> — Motorola recommends restricting that to supervisors. True Capacity-Max
+Kill can <em>only</em> come from a dispatch application, never radio-to-radio.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<h2>How it travels — and why it's weakly protected</h2>
+<div class="seqd">
+  <div class="seqd-heads">
+    <div class="h">Originator (dispatch / supervisor radio)</div>
+    <div class="h">Target radio (firmware enforces)</div>
+  </div>
+  <div class="track">
+    <div class="note">Knows the target's individual Radio ID, color code, (and any privacy key)</div>
+    <div class="msg ltr"><div class="lbl">Stun command — CSBK addressed to the Radio ID <span class="loopn">auth optional</span></div><div class="line"></div></div>
+    <div class="msg rtl dashed"><div class="lbl">Acknowledgement (recoverable path ACKs success)</div><div class="line"></div></div>
+    <div class="note">Target now disabled — may still register / be tracked / await revive</div>
+    <div class="msg ltr"><div class="lbl">Revive command — re-enables the stunned radio</div><div class="line"></div></div>
+    <div class="msg rtl dashed"><div class="lbl">Acknowledgement</div><div class="line"></div></div>
+  </div>
+</div>
+<p class="flow-caption">It's a short, individually-addressed CSBK — not voice. The target must be powered on, in range, and on the right channel to hear it; a plain conventional disable is <strong>not</strong> reliably queued if the radio is off.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<div class="callout">
+  <span class="label">Security reality</span>
+  Conventional Radio Disable is effectively <strong>spoofable</strong>: anyone who knows the
+  radio's ID, frequencies, color code and any privacy key can disable (or re-enable) it —
+  there's no mandatory crypto by default. And ETSI's Tier III "without authentication"
+  variants mean even trunked stun/kill <em>may</em> run unauthenticated depending on config.<sup class="cite"><a href="#s1">1</a></sup>
+</div>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Can your bridge ORIGINATE stun/kill/revive?</strong> Only if <em>both</em> hold: (1) the DMR module's SDK actually exposes an API to send these PDUs — <strong>often it doesn't</strong>, as it's a privileged supervisor/dispatch feature — and (2) the target fleet honors that exact command (same vendor/FID with decode enabled, or the standardized Tier III path). Treat it as "probably vendor-locked / unavailable" until the module's SDK docs prove otherwise.</li>
+    <li><strong>Can your own device be stunned/killed?</strong> Only if its DMR module decodes disable for its Radio ID. If you <em>disable Radio Disable decode</em> in the module's config, the DMR side is immune. A stun would knock out the DMR link but not the Android/PoC side.</li>
+    <li><strong>It's a DoS surface both ways.</strong> A bridge that can originate disables is a powerful denial tool; one that exposes its module's Radio ID is a denial <em>target</em>. Protect Radio IDs; prefer authenticated mechanisms; default decode off unless you truly need OTA management.</li>
+    <li><strong>Mapping to PoC:</strong> there's no native PoC equivalent unless you build one — decide whether "disable a unit" is a feature your platform offers, and never silently bridge a spoofable command into a privileged PoC action.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"What is the core difference between a stun and a kill?","options":["Stun is louder than kill","Stun is revivable, kill terminal","Kill is faster than stun","They are identical commands"],"answer":1,"why":"Stun (Radio Disable) is revivable over the air; kill is terminal — recovery needs depot/CPS reprogramming, not an OTA revive."},
+  {"q":"In which DMR tier is stun/revive/kill actually part of the ETSI standard?","options":["Tier I license-free","Tier II conventional","Tier III trunked","All tiers equally"],"answer":2,"why":"TS 102 361-4 standardizes MS Stun/Revive/Kill for Tier III trunking; on conventional/Tier II it is manufacturer-specific under a FID."},
+  {"q":"Why might a Motorola-format disable fail to stun a Hytera radio?","options":["Different transmit power","Carried under a vendor FID","The color codes differ","Hytera radios cannot stun"],"answer":1,"why":"Conventional disable rides under a manufacturer Feature ID; a radio only honors commands for a feature set it implements and decodes, so cross-vendor is not guaranteed."},
+  {"q":"Where is a stun command actually enforced?","options":["At the repeater only","In the target radio firmware","On the dispatch server","In the PoC platform"],"answer":1,"why":"The target disables itself; its firmware/codeplug enforces it, and Radio Disable Decode can be turned off so the radio ignores the command entirely."},
+  {"q":"What makes conventional Radio Disable a security concern?","options":["It needs no Radio ID","It is effectively spoofable","It always uses strong crypto","It only works when off"],"answer":1,"why":"With no mandatory authentication, anyone knowing the ID, color code and any privacy key can disable or re-enable the radio."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://cwh050.blogspot.com/2020/07/the-difference-between-radio-kill-and.html">DJ0WH — The difference between Radio Kill and Radio Disable</a>
+  for the clearest vendor-behaviour breakdown (recoverability, spoofability, Capacity-Max Kill),
+  and <strong>ETSI TS&nbsp;102&nbsp;361-4</strong> for the standardized Tier III MS Stun/Revive/Kill procedures.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "How do I find out if our specific DMR module's SDK can send these?",
+  "Should our product offer a PoC-side 'disable unit' at all, and how to secure it?", or
+  "Walk me through hardening our module's Radio ID against a spoofed stun."
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0009-radio-to-radio-direct-mode.html">← Lesson 9</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <span style="color:var(--ink-soft);">Radio management &amp; security — beyond the voice path.</span>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://cwh050.blogspot.com/2020/07/the-difference-between-radio-kill-and.html">DJ0WH — Radio Kill vs Radio Disable</a> — recoverable vs terminal; Capacity Max Kill; spoofability of conventional disable; auth key.</li>
+    <li id="s2"><a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236104/01.03.01_60/ts_10236104v010301p.pdf">ETSI TS 102 361-4 (DMR Trunking)</a> — standardized MS Stun / Revive / Kill procedures, with and without authentication.</li>
+    <li id="s3"><a href="https://deepwiki.com/lwvmobile/dsd-fme/3.3-dmr-control-signaling">dsd-fme — DMR control signalling (FID table)</a> — FID 0 standard, 0x10 Motorola, 0x68/0x08 Hytera; manufacturer-specific CSBKs; interop limits.</li>
+    <li id="s4"><a href="http://cwh050.mywikis.wiki/wiki/Radio_Disable/Enable">DJ0WH MOTOTRBO wiki — Radio Disable/Enable</a> — Radio Disable Decode codeplug option; supervisor-only origination; dispatch apps; ACKs; on/in-range requirement.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

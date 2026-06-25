@@ -131,6 +131,21 @@ once they are understood — it is a record of compressed knowledge, not a dicti
   <dt>Talkaround</dt>
   <dd>Direct-mode operation on a repeater's <em>output</em> frequency, to bypass the repeater when it's down or out of range (TX moved to equal RX).</dd>
 
+  <dt>CSBK <span class="alias">— Control Signalling Block</span></dt>
+  <dd>A short, non-voice signalling burst carrying control commands (preambles, acknowledgements, radio management). Stun/kill/revive ride on a CSBK addressed to a Radio ID.</dd>
+
+  <dt>FID <span class="alias">— Feature ID / Manufacturer's FID (MFID)</span></dt>
+  <dd>A byte in a CSBK marking which feature set it belongs to: 0 = standard/DMRA-common, 0x10 = Motorola, 0x68/0x08 = Hytera. Why vendor-specific commands don't interoperate.</dd>
+
+  <dt>Stun <span class="alias">— Radio Disable / Inhibit</span></dt>
+  <dd>A remote, individually-addressed command that makes a target radio disable its own normal TX/RX. Recoverable: a Revive re-enables it over the air. Enforced by the target's firmware (decode can be disabled in the codeplug).</dd>
+
+  <dt>Kill <span class="alias">— Permanent Disable</span></dt>
+  <dd>A terminal remote disable for stolen radios; recovery needs depot/CPS reprogramming, not an over-the-air Revive. Standardized only for Tier III (ETSI TS 102 361-4); otherwise vendor-specific.</dd>
+
+  <dt>Revive <span class="alias">— Radio Enable / Uninhibit</span></dt>
+  <dd>The command that reverses a Stun. Never undoes a Kill.</dd>
+
 </dl>
 
 <h2>Voice &amp; bridging</h2>
