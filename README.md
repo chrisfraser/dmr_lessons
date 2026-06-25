@@ -18,6 +18,9 @@ and ends with a quick self-check quiz.
 8. [How a Radio Talks to a Repeater](lessons/0008-radio-to-repeater-handshake.html) — PTT sequence, air interface
 9. [Radio to Radio (Direct Mode)](lessons/0009-radio-to-radio-direct-mode.html) — simplex, DMO, DCDM
 10. [Stun, Kill & Revive](lessons/0010-stun-kill-revive.html) — remote radio disable; spec vs vendor; security
+11. [Analog vs Digital Channels](lessons/0011-analog-vs-digital.html) — FM vs DMR; the metadata gap
+12. [Data & Text Messaging](lessons/0012-data-and-text-messaging.html) — text, GPS, presence; voice-or-data interleaving
+13. [Emergency & Panic](lessons/0013-emergency-and-panic.html) — alarm vs flagged voice; revert; PoC elevation
 
 ## Reference
 - [Glossary](reference/glossary.html) — canonical vocabulary

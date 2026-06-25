@@ -148,6 +148,61 @@ once they are understood — it is a record of compressed knowledge, not a dicti
 
 </dl>
 
+<h2>Analog &amp; modes</h2>
+<dl class="gloss">
+
+  <dt>Analog FM</dt>
+  <dd>Continuous frequency modulation — the legacy mode. One conversation per channel, no inherent identity or data, graceful (gradual) degradation. Most DMR radios are dual-mode and can do it.
+  <div class="avoid">Avoid: "analog DMR" (DMR is digital; analog is the separate FM mode).</div></dd>
+
+  <dt>CTCSS / DCS <span class="alias">— PL tone / DPL</span></dt>
+  <dd>Sub-audible tone/code on analog FM that un-mutes the receiver. A muting filter only — it carries no identity. The analog counterpart to a color code.</dd>
+
+  <dt>Mixed mode <span class="alias">— dynamic mixed mode</span></dt>
+  <dd>A repeater that auto-senses each signal and repeats analog as analog, DMR as digital — letting both coexist during migration off analog.</dd>
+
+  <dt>Digital cliff</dt>
+  <dd>DMR's failure behaviour: clean audio up to a signal threshold, then an abrupt drop to nothing — unlike analog's gradual fade.</dd>
+
+</dl>
+
+<h2>Data &amp; messaging</h2>
+<dl class="gloss">
+
+  <dt>Short data / Packet data</dt>
+  <dd>DMR's non-voice payloads: short data = tiny status/structured blocks; packet data = longer IP-style data in coded blocks. Confirmed (ACK + retry) or unconfirmed.</dd>
+
+  <dt>TMS <span class="alias">— Text Messaging Service</span></dt>
+  <dd>SMS-style text to a Radio ID or talkgroup. A vendor (Motorola/Hytera) application layer over ETSI data, not ETSI itself.</dd>
+
+  <dt>ARS <span class="alias">— Automatic Registration Service</span></dt>
+  <dd>A radio's "I'm online" registration on power-up/site change. Vendor convention; maps cleanly to PoC presence.</dd>
+
+  <dt>LRRP <span class="alias">— Location Request/Response Protocol</span></dt>
+  <dd>The (Motorola) GPS/location protocol, encoded as MBXML. Maps to PoC map pins. Vendor, not ETSI.</dd>
+
+</dl>
+
+<h2>Emergency</h2>
+<dl class="gloss">
+
+  <dt>Emergency Alarm</dt>
+  <dd>A data/signalling distress message (CSBK / short data), no voice, from a Radio ID to a target group, sent confirmed with retries until acknowledged.</dd>
+
+  <dt>Emergency Voice <span class="alias">— Emergency Call</span></dt>
+  <dd>A voice call carrying an emergency flag in the Link Control (FLCO). Detectable per-superframe from the embedded LC.</dd>
+
+  <dt>Hot Mic <span class="alias">— Emergency Microphone, voice to follow</span></dt>
+  <dd>After an alarm, the radio auto-keys the mic without PTT so dispatch hears the scene. Vendor-configurable.</dd>
+
+  <dt>Emergency Revert</dt>
+  <dd>Sending the emergency on a designated channel/talkgroup regardless of the user's current channel — so it may appear where they weren't operating.</dd>
+
+  <dt>Man Down / Lone Worker</dt>
+  <dd>Vendor sensor/timer triggers (tilt/no-motion; inactivity) that automatically start an emergency. They trigger; the standard alarm/voice path transmits it.</dd>
+
+</dl>
+
 <h2>Voice &amp; bridging</h2>
 <dl class="gloss">
 

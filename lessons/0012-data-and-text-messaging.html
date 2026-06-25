@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 12 — Data & Text Messaging</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 12</span>
+</div>
+
+<h1>Data &amp; Text Messaging</h1>
+<p class="subtitle">DMR carries more than voice — text, GPS, presence, control commands. The rule that governs all of it: on a given slot, at a given instant, it's voice <em>or</em> data, never both.</p>
+
+<p>Beyond the voice you've studied, DMR moves <strong>data</strong>: SMS-style text,
+GPS locations, registration, and short control commands. For your bridge these are
+candidate PoC features (chat, map pins, presence). But two things shape what's
+realistic: data is <em>slow</em>, and it <em>competes with voice for the slot</em>.</p>
+
+<h2>The catalogue of non-voice messages</h2>
+<table class="cmp">
+  <tr><th>Type</th><th>What it is</th><th>Standard?</th></tr>
+  <tr><td>CSBK</td><td>Single-burst control: preamble, ACKs, Radio Check, Call Alert, Radio Disable</td><td>ETSI (-1/-2)</td></tr>
+  <tr><td>Short data</td><td>Tiny payloads — status codes, short structured blocks (UDT)</td><td>ETSI (-1/-3)</td></tr>
+  <tr><td>Packet data</td><td>Longer, IP-style data in Rate ½ / ¾ coded blocks</td><td>ETSI (-3)</td></tr>
+  <tr><td>TMS (text)</td><td>SMS-style text to a Radio ID or talkgroup</td><td><strong>Vendor</strong> (Motorola/Hytera) over ETSI data</td></tr>
+  <tr><td>ARS</td><td>Auto-registration — radio announces "I'm online"</td><td><strong>Vendor</strong></td></tr>
+  <tr><td>GPS / LRRP</td><td>Location request/response (encoded as MBXML)</td><td><strong>Vendor</strong></td></tr>
+</table>
+<p>The layering matters: ETSI <strong>TS&nbsp;102&nbsp;361-3</strong> defines the data
+<em>protocol</em> (confirmed/unconfirmed transport, packet data, retries); the air-interface
+burst/header formats are in <strong>-1</strong>. But <strong>TMS, ARS, and LRRP are
+application layers vendors built on top</strong> — not ETSI. "It's DMR text" really means
+"Motorola's protocol over DMR's data service."<sup class="cite"><a href="#s1">1</a></sup></p>
+
+<h2>How a text message actually goes out</h2>
+<p>A text is <em>not</em> voice — it's a run of <strong>data bursts</strong> on one time
+slot, addressed to a Radio ID or talkgroup:<sup class="cite"><a href="#s2">2</a></sup></p>
+<div class="flow">
+  <div class="node"><span class="n-title">Preamble</span><span class="n-sub">CSBK, wake/aim</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Data header</span><span class="n-sub">confirmed? size? dest</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Data blocks</span><span class="n-sub">Rate ½ / ¾ ×N</span></div>
+  <div class="arrow">→</div>
+  <div class="node"><span class="n-title">Last block</span><span class="n-sub">+ ACK if confirmed</span></div>
+</div>
+<p><strong>Confirmed</strong> delivery uses link-layer ACKs and <em>selective retry</em> —
+the receiver says which blocks it missed and only those are re-sent.
+<strong>Unconfirmed</strong> is fire-and-forget. Longer messages fragment across multiple
+blocks, reassembled via the header's block count and per-block CRCs.<sup class="cite"><a href="#s3">3</a></sup></p>
+
+<h2>The big rule: voice OR data, never both on a slot</h2>
+<p>DMR is 2-slot TDMA on a 30&nbsp;ms cycle. Any single burst is <em>either</em> a voice
+burst <em>or</em> a data/control burst — different burst types sharing the same slot
+structure, never simultaneous.<sup class="cite"><a href="#s2">2</a></sup> A receiver tells
+them apart by the <strong>48-bit sync pattern</strong> (distinct values for voice vs data,
+MS- vs BS-sourced — the same mechanism from Lesson&nbsp;8).</p>
+
+<div class="slots">
+  <div class="slot s1">TS1 — voice call in progress<small>data for these users must wait…</small></div>
+  <div class="slot s2">TS2 — free → a text can go here<small>or queue until TS1 frees</small></div>
+</div>
+<p style="font-size:0.85rem;color:var(--ink-soft);margin-top:-0.4rem;"><strong>Voice has priority; data queues behind it</strong> — or rides the other slot if free. (Motorola's "data over voice interrupt" can preempt, but it's a proprietary extra, not standard, and native text/GPS don't use it.)<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<h2>How fast? Slow.</h2>
+<p>A slot yields only a few kbps after FEC — a Rate&nbsp;¾ data call is ~2–3&nbsp;kbps usable;
+a GPS packet is under ~600&nbsp;ms on air. <strong>Text and short GPS/status are the realistic
+payloads</strong>; bulk/file transfer is impractical and steals slot time from voice.<sup class="cite"><a href="#s4">4</a></sup></p>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Natural PoC mappings:</strong> TMS text ↔ PoC chat (preserve Radio&nbsp;ID/talkgroup addressing and confirmed-vs-unconfirmed = delivery receipts); LRRP GPS ↔ PoC map pins; ARS ↔ PoC presence/online.</li>
+    <li><strong>SDK reality check:</strong> whether you get TMS/LRRP/ARS as parsed events depends on the <em>vendor SDK</em>, not the chip. Some expose only <em>raw short/packet-data send-receive</em> and leave you to implement MBXML and the Motorola/Hytera app layers yourself (open libs like ok-dmrlib are the reference).</li>
+    <li><strong>Plan for latency:</strong> because voice always preempts data, message delivery is best-effort with variable latency — don't promise instant text while a talkgroup is busy.</li>
+    <li><strong>Keep it small:</strong> design the bridge around text + location, not data pipes; DMR's data rate won't carry more.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"On one time slot at one instant, what can DMR carry?","options":["Voice and data together","Voice or data, not both","Two data streams at once","Two voice calls at once"],"answer":1,"why":"A burst is either a voice burst or a data/control burst; they never coexist on the same slot at the same time — voice has priority and data queues."},
+  {"q":"Are TMS text, ARS and LRRP GPS part of the ETSI standard?","options":["Yes, all fully standard","No, vendor layers atop","Only TMS is standard","Only on Tier III sets"],"answer":1,"why":"ETSI defines the data transport (-3) and burst formats (-1); TMS/ARS/LRRP are Motorola/Hytera application protocols built on top — not ETSI."},
+  {"q":"What does confirmed data delivery add over unconfirmed?","options":["Higher transmit power","ACKs and selective retry","A second time slot","Voice-quality audio"],"answer":1,"why":"Confirmed mode uses link-layer ACKs and resends only the blocks the receiver missed; unconfirmed is fire-and-forget."},
+  {"q":"Why design a DMR bridge around text and GPS, not file transfer?","options":["Vendors forbid large data","Data rate is only kbps","Text is more secure","GPS uses no slot time"],"answer":1,"why":"A slot yields only a few kbps after FEC and competes with voice, so only small payloads (text, short location/status) are practical."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="http://www.wavecom.ch/content/pdf/advanced_protocol_dmr.pdf">Wavecom — Advanced Protocol: DMR</a>
+  for the burst/sync voice-vs-data exclusivity, and <a href="https://github.com/OK-DMR/ok-dmrlib">ok-dmrlib</a>
+  as the working reference for the proprietary TMS/LRRP/ARS layers you may have to implement.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Which of text/GPS/presence does our v1 actually need?",
+  "What's MBXML and will we have to decode it?", or
+  "How should the bridge behave when a text arrives while the talkgroup is busy with voice?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0011-analog-vs-digital.html">← Lesson 11</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0013-emergency-and-panic.html">Next → Lesson 13: Emergency &amp; panic</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://github.com/OK-DMR/ok-dmrlib">ok-dmrlib</a> — standard CSBK/data PDUs vs proprietary LRRP/ARS/TMS (Motorola) and Hytera stack.</li>
+    <li id="s2"><a href="http://www.wavecom.ch/content/pdf/advanced_protocol_dmr.pdf">Wavecom — Advanced Protocol: DMR</a> — burst/superframe/sync; voice and data cannot share a slot simultaneously.</li>
+    <li id="s3"><a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236103/01.01.07_60/ts_10236103v010107p.pdf">ETSI TS 102 361-3 (Data Protocol)</a> — confirmed/unconfirmed transport, selective ARQ, packet data, fragmentation.</li>
+    <li id="s4"><a href="https://cwh050.mywikis.wiki/wiki/Transmit_Interrupt">MOTOTRBO — Transmit Interrupt / data-over-voice</a> — voice priority, data queuing; proprietary preemption; GPS packet timing.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

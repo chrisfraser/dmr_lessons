@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 13 — Emergency & Panic</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 13</span>
+</div>
+
+<h1>Emergency &amp; Panic</h1>
+<p class="subtitle">The orange button. It's two mechanisms wearing one name — a data <em>alarm</em> and a flagged <em>voice call</em> — and your bridge must catch both, on the right channel, and elevate them.</p>
+
+<p>That dedicated emergency button puts the radio into <strong>Emergency mode</strong> and
+signals distress to a dispatcher or talkgroup. For a safety-relevant product this is the
+highest-stakes feature to bridge correctly: miss it, mis-route it, or let it get stuck,
+and someone in trouble goes unheard.</p>
+
+<h2>Two mechanisms, one button</h2>
+<p>Everything reduces to these two — the rest are combinations:<sup class="cite"><a href="#s1">1</a></sup></p>
+<table class="cmp">
+  <tr><th>Mechanism</th><th>What it is</th><th>How the bridge detects it</th></tr>
+  <tr><td>Emergency Alarm</td><td>A <strong>data/signalling</strong> message (CSBK / short data), no voice — source ID → target group, sent confirmed with retries until ACK</td><td>Parse the inbound emergency CSBK / short-data PDU</td></tr>
+  <tr><td>Emergency Voice</td><td>A normal voice call carrying an <strong>emergency flag in the Link Control</strong> (FLCO)</td><td>Inspect the LC/FLCO of the voice header &amp; embedded LC</td></tr>
+</table>
+
+<h3>The common combinations</h3>
+<ul>
+  <li><strong>Alarm only</strong> — signalling, repeated until acknowledged, then it stops.<sup class="cite"><a href="#s1">1</a></sup></li>
+  <li><strong>Alarm + Call</strong> — alarm first, then follow-up PTT becomes an emergency-flagged voice call.</li>
+  <li><strong>Alarm + Voice to follow (Hot Mic)</strong> — alarm, then the radio <em>auto-keys the mic</em> (no PTT) so dispatch hears the scene. Vendor-configurable duration.</li>
+  <li><strong>Silent</strong> — emergency raised with all local indications suppressed (covert duress).</li>
+</ul>
+
+<div class="callout">
+  <span class="label">Standard vs vendor — be precise</span>
+  ETSI (<strong>TS 102 361-1/-2</strong>) defines the <em>wire representation</em>: the
+  emergency flag in the voice <strong>Link Control / FLCO</strong>, the control-signalling
+  emergency message, and the <strong>call-priority</strong> concept. Everything else —
+  <strong>Man Down</strong> (tilt/no-motion sensor), <strong>Lone Worker</strong> (inactivity
+  timer), <strong>Hot Mic</strong> duration, <strong>Emergency Revert</strong>, <strong>Silent</strong>,
+  and priority-1 <em>preemption</em> rules — are <strong>vendor features built on top</strong>.
+  Those triggers only <em>start</em> an emergency; once started it rides the standard alarm/voice path.<sup class="cite"><a href="#s2">2</a></sup>
+</div>
+
+<h2>Emergency Revert — the one that trips up integrators</h2>
+<p>A radio can be programmed to send the emergency on a <strong>designated revert
+channel/talkgroup</strong> regardless of where the user currently is — then return.<sup class="cite"><a href="#s3">3</a></sup>
+So the emergency may appear on a talkgroup the user wasn't even using. (Note: some modes,
+e.g. Capacity Plus, don't support revert at all.)</p>
+
+<h2>Over the air &amp; what dispatch does</h2>
+<div class="seqd">
+  <div class="seqd-heads">
+    <div class="h">Radio in distress</div>
+    <div class="h">Dispatch / talkgroup</div>
+  </div>
+  <div class="track">
+    <div class="evt"><span>Emergency button / Man Down</span></div>
+    <div class="note">Radio may switch to its revert talkgroup first</div>
+    <div class="msg ltr"><div class="lbl">Emergency Alarm — CSBK to target group <span class="loopn">retries until ACK</span></div><div class="line"></div></div>
+    <div class="msg rtl dashed"><div class="lbl">Acknowledgement (stops the retry loop)</div><div class="line"></div></div>
+    <div class="msg ltr"><div class="lbl">Emergency voice / hot mic — LC carries the emergency flag</div><div class="line"></div></div>
+    <div class="note">Dispatch: alert tone, source ID, GPS on map; emergency persists until explicitly CLEARED</div>
+  </div>
+</div>
+<p class="flow-caption">Emergency can <strong>preempt</strong> a busy channel — in trunked systems it's auto-allocated priority&nbsp;1; on conventional channels an "impolite" retry transmits over existing activity.<sup class="cite"><a href="#s1">1</a></sup></p>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge — the high-stakes one</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Detect on BOTH paths:</strong> the emergency alarm (a CSBK with no voice) <em>and</em> the emergency flag in voice LC/FLCO (hot-mic and alarm-and-call carry it in voice). Watch both or you'll miss cases.</li>
+    <li><strong>Monitor the revert talkgroup,</strong> not just the user's nominal one — or the emergency never reaches you.</li>
+    <li><strong>Elevate to a PoC emergency state:</strong> force-pop it to the PoC dispatcher and preempt normal traffic to mirror priority-1; queuing it behind ordinary calls defeats the purpose.</li>
+    <li><strong>Handle ACK &amp; clear bidirectionally:</strong> decide whether the bridge/PoC dispatcher ACKs the alarm (to stop the radio's retry loop), and reliably propagate <em>clear</em> — a stuck emergency state is a real hazard.</li>
+    <li><strong>Don't over-trust it:</strong> Radio IDs aren't authenticated, so a spoofed emergency is possible — consider source allowlists. De-dupe repeated alarm PDUs. And respect <strong>silent</strong> emergencies — don't send loud confirmations back that blow a user's cover.</li>
+    <li><strong>SDK:</strong> dispatch-grade APIs (Motorola network API, Hytera HDAP) usually expose emergency as a discrete event; raw RF/MMDVM means parsing the CSBK and LC flag yourself. Confirm for your module.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"A DMR emergency can arrive as which two things?","options":["A text and a GPS ping","An alarm and flagged voice","A stun and a revive","A color code and a tone"],"answer":1,"why":"A data emergency Alarm (CSBK, no voice) and an emergency-flagged Voice call (flag in the Link Control/FLCO). Hot-mic and alarm-and-call put it in voice."},
+  {"q":"Why must a bridge monitor the emergency revert talkgroup?","options":["It carries GPS only","Emergency may appear there","It is always encrypted","It has higher audio quality"],"answer":1,"why":"Revert sends the emergency on a designated channel/talkgroup regardless of where the user was, so it may not appear on their normal talkgroup."},
+  {"q":"Which part of emergency is ETSI-standard versus vendor?","options":["Man Down is standard","LC emergency flag is standard","Hot mic timer is standard","Lone Worker is standard"],"answer":1,"why":"The LC/FLCO emergency flag, the control-signalling alarm and call priority are standardized; Man Down, Lone Worker, hot mic, revert and silent are vendor features on top."},
+  {"q":"What is a key reliability/safety concern when bridging emergencies?","options":["Audio is too loud","A stuck or missed clear","Texts are too slow","Battery drains faster"],"answer":1,"why":"Emergency state persists until explicitly cleared; the bridge must propagate clear bidirectionally and de-dupe retried alarms so the state neither sticks nor is missed."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://cwh050.mywikis.wiki/wiki/Emergency">MOTOTRBO Emergency (technical wiki)</a>
+  for the full behaviour — alarm types, hot mic, silent, retries, ACK, priority-1, revert limits —
+  and <strong>ETSI TS 102 361-2</strong> for the standardized emergency services and LC flag.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Design the bridge's emergency detection + PoC-elevation flow,"
+  "Should the bridge or the PoC dispatcher ACK the DMR alarm?", or
+  "How do we stop a spoofed emergency from triggering a false PoC alert?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0012-data-and-text-messaging.html">← Lesson 12</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <span style="color:var(--ink-soft);">Safety-critical features — the highest-stakes thing to bridge right.</span>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://cwh050.mywikis.wiki/wiki/Emergency">MOTOTRBO Emergency (DJ0WH wiki)</a> — alarm types, hot mic, silent, retries/ACK, priority-1 preemption, revert limits.</li>
+    <li id="s2"><a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236102/01.02.06_60/ts_10236102v010206p.pdf">ETSI TS 102 361-2</a> — emergency services &amp; generic control signalling; LC/FLCO emergency flag (with -1).</li>
+    <li id="s3"><a href="https://support.smartptt.com/hc/en-us/articles/200241248-Emergency-mode-settings">SmartPTT — Emergency mode settings</a> — revert behaviour, dispatch ACK, alert tones, indication; clear handling.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

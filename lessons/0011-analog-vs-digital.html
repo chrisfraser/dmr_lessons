@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 11 — Analog vs Digital Channels</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 11</span>
+</div>
+
+<h1>Analog vs Digital Channels</h1>
+<p class="subtitle">Most DMR radios are dual-mode — they do old analog FM too. The gap between the two modes is widest exactly where your bridge cares most: <em>metadata</em>.</p>
+
+<p>A DMR radio's codeplug can hold both <strong>analog FM</strong> channels and
+<strong>digital DMR</strong> channels side by side, selected per channel.<sup class="cite"><a href="#s1">1</a></sup>
+Knowing how they differ tells you what your bridge gets handed when a transmission
+arrives — and analog hands you far less than DMR.</p>
+
+<h2>The core technical split</h2>
+<table class="cmp">
+  <tr><th>&nbsp;</th><th>Analog FM</th><th>Digital DMR</th></tr>
+  <tr><td>Signal</td><td>Continuous frequency modulation — the RF <em>is</em> the audio</td><td>Voice digitised by AMBE+2, sent as 4-FSK bursts (9600 bps)</td></tr>
+  <tr><td>Conversations / 12.5 kHz</td><td>One</td><td>Two (2-slot TDMA)</td></tr>
+  <tr><td>Access / squelch</td><td>CTCSS / DCS tone (a mute filter)</td><td>Color code + talkgroup (filter <em>and</em> routing)</td></tr>
+  <tr><td>Identity</td><td><strong>None</strong> — a tone carries no ID</td><td>Source Radio ID, destination, call type — inline</td></tr>
+  <tr><td>Edge behaviour</td><td>Graceful: gradual static</td><td>Cliff: clean, then suddenly nothing</td></tr>
+  <tr><td>Text / GPS / encryption</td><td>No (analog has none natively)</td><td>Yes</td></tr>
+</table>
+
+<h2>Two differences worth feeling, not just reading</h2>
+
+<h3>The "digital cliff"</h3>
+<p>Analog degrades <strong>gracefully</strong> — as you move away, hiss rises but speech
+stays partly intelligible far into the fringe. DMR uses FEC to deliver <strong>clean</strong>
+audio right up to a threshold, then falls off a <strong>cliff</strong>: below it,
+decoding fails and you get silence, not static.<sup class="cite"><a href="#s2">2</a></sup>
+DMR is cleaner for most of the range; analog can claw out the last desperate mile.
+(Be skeptical of "DMR has longer range" marketing — usable range is similar.)</p>
+
+<h3>Squelch vs routing</h3>
+<p>A CTCSS tone (a "PL tone") only decides <em>whether your speaker un-mutes</em> — it
+says nothing about who's talking. DMR's <span class="term">color code</span> is the
+nearest analog to that filter, but DMR adds a whole second dimension: the
+<span class="term">talkgroup</span> + <span class="term">time slot</span> decide
+<em>routing</em> — who actually hears whom.<sup class="cite"><a href="#s3">3</a></sup></p>
+
+<h2>Mixed mode &amp; migration</h2>
+<p>A <strong>dynamic mixed-mode</strong> repeater auto-senses each incoming signal and
+repeats it in kind — analog call repeated as analog, DMR as digital — letting old and
+new radios share one channel during a fleet's transition off analog.<sup class="cite"><a href="#s4">4</a></sup>
+(In practice such repeaters usually only repeat <em>tone-qualified</em> analog, so open
+chatter doesn't block DMR access.)</p>
+
+<div class="callout bridge-note">
+  <span class="label">Why this is the lesson that matters for your bridge</span>
+  The split is about <strong>metadata</strong>. When you bridge a <strong>DMR</strong>
+  call you get rich, structured routing for free — source Radio&nbsp;ID → PoC user,
+  talkgroup → PoC group, call type → 1:1 vs group (everything from Lessons 1&amp;3). When
+  you bridge an <strong>analog</strong> channel you get <em>audio and almost nothing else</em>:
+  a matched tone tells you "someone is talking," not who or for whom. Any analog→PoC mapping
+  must be inferred from <em>which physical channel/tone</em> the audio arrived on, or bolted
+  on with extra signalling (DTMF, MDC-1200). Budget real design effort for analog identity;
+  DMR gives it to you. If your product only needs to bridge DMR, you dodge this entirely.
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"What is the single biggest difference that affects bridging?","options":["Analog is louder overall","Analog carries no identity metadata","Digital uses more battery","Analog has better range"],"answer":1,"why":"Analog gives you audio plus at most a matched tone; DMR carries source ID, talkgroup and call type inline — the routing metadata a bridge needs."},
+  {"q":"Describe the digital cliff versus analog degradation.","options":["Digital fades, analog cuts out","Digital clean then sudden silence","Both fade identically out","Analog cuts, digital fades"],"answer":1,"why":"DMR stays clean up to a threshold then drops abruptly; analog degrades gradually into static and clings on longer at the extreme edge."},
+  {"q":"How does a CTCSS tone differ from a DMR talkgroup?","options":["Tone routes, talkgroup mutes","Tone mutes, talkgroup routes","They are the same thing","Tone carries the Radio ID"],"answer":1,"why":"CTCSS only un-mutes the speaker (a filter); a talkgroup (with time slot) actually routes who hears whom — DMR adds routing on top of filtering."},
+  {"q":"Can one DMR radios codeplug hold both analog and digital channels?","options":["No, separate radios needed","Yes, channel type per channel","Only with a firmware hack","Only on Tier III radios"],"answer":1,"why":"Most DMR radios are dual-mode; each channel is typed analog FM or digital DMR, and both coexist in one codeplug — the basis of mixed-mode migration."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://forums.radioreference.com/threads/digital-vs-analog-voice.405395/">RadioReference — Digital vs Analog voice</a>
+  for the cliff-effect reality from practitioners, and the <a href="https://static.dm3mat.de/qdmr/manual/ch01s10.html">qdmr codeplug manual</a>
+  to see analog and digital channel fields side by side.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Does our product need to bridge analog at all, or DMR only?",
+  "If we must bridge analog, how do we recover identity?", or
+  "What does mixed-mode mean for which channels our device offers?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0010-stun-kill-revive.html">← Lesson 10</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="0012-data-and-text-messaging.html">Next → Lesson 12: Data &amp; text messaging</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://static.dm3mat.de/qdmr/manual/ch01s10.html">qdmr manual — Codeplug Assembly</a> — per-channel analog/digital type; dual-mode radios; one codeplug holds both.</li>
+    <li id="s2"><a href="https://forums.radioreference.com/threads/digital-vs-analog-voice.405395/">RadioReference — Digital vs Analog voice</a> — cliff effect vs graceful degradation; range reality.</li>
+    <li id="s3"><a href="https://dmr-marc.net/media/DMR-FAQs.pdf">DMR-MARC — DMR FAQs</a> — color code as CTCSS/DCS analog; talkgroups for routing; "digital doesn't use squelch."</li>
+    <li id="s4"><a href="https://cwh050.blogspot.com/2015/03/dynamic-mixed-mode.html">DJ0WH — Dynamic Mixed Mode</a> — auto-sensing mixed-mode repeaters; analog→digital migration; tone-qualified analog repeat.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>
