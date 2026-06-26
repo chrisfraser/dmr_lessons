@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 14 — Standard vs Vendor Features</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="masthead">
+  <span class="course">DMR Radio Basics</span>
+  <span class="lesson-no">Lesson 14</span>
+</div>
+
+<h1>Standard vs Vendor Features</h1>
+<p class="subtitle">Which DMR features work across <em>any</em> compliant radio, and which only inside one vendor's fleet. One byte — the Feature ID — is the lens that answers it.</p>
+
+<p>You've now met most DMR features across the course. The product-critical question
+that cuts across all of them: <strong>if our radios talk to a customer's existing
+fleet of a different brand, what's guaranteed to work?</strong> The answer isn't
+feature-by-feature folklore — it's governed by <em>where each feature is specified</em>.</p>
+
+<h2>The lens: the Feature ID (FID)</h2>
+<p>Every control message (<span class="term">CSBK</span>) and many PDUs carry a
+<strong>FID</strong> byte saying which feature set defines its meaning:<sup class="cite"><a href="#s1">1</a></sup></p>
+<div class="legend">
+  <span><span class="tag std">ETSI</span> in TS&nbsp;102&nbsp;361 — interoperable by definition</span>
+  <span><span class="tag dmra">DMRA / FID&nbsp;0</span> common air-interface service — candidate interop</span>
+  <span><span class="tag vendor">Vendor FID</span> 0x10 Motorola, 0x08/0x68 Hytera — <em>not</em> guaranteed cross-vendor</span>
+  <span><span class="tag app">App layer</span> protocol over the data service — often cloned, verify</span>
+  <span><span class="tag local">Local</span> codeplug only — never crosses the air</span>
+</div>
+<p>FID&nbsp;0x00 → any compliant radio can interpret it. FID&nbsp;0x10 or 0x68 → the payload
+means only what that vendor says. That single byte is your best predictor of "will it
+interoperate."<sup class="cite"><a href="#s1">1</a></sup></p>
+
+<h2>The classification</h2>
+<table class="cmp">
+  <tr><th>Feature</th><th>Where specified</th><th>Cross-vendor?</th></tr>
+  <tr><td>2-slot TDMA, color code, slots, LC, CACH</td><td><span class="tag std">ETSI -1</span></td><td>Safe</td></tr>
+  <tr><td>Group / Private / All call</td><td><span class="tag std">ETSI -2</span></td><td>Safe</td></tr>
+  <tr><td>Clear voice (AMBE+2)</td><td><span class="tag std">ETSI -2</span></td><td>Safe</td></tr>
+  <tr><td>Direct mode / talkaround</td><td><span class="tag std">ETSI -1/-2</span></td><td>Safe</td></tr>
+  <tr><td>Data bearer (short / packet, confirmed/unconfirmed)</td><td><span class="tag std">ETSI -3</span></td><td>Safe (bearer)</td></tr>
+  <tr><td>Emergency <em>flag</em> in LC + call priority</td><td><span class="tag std">ETSI -1/-2</span></td><td>Safe (the bit)</td></tr>
+  <tr><td>Tier III trunking</td><td><span class="tag std">ETSI -4</span></td><td>Safe</td></tr>
+  <tr><td>Call Alert, Radio Check</td><td><span class="tag dmra">DMRA / FID 0</span> <span class="tag vendor">+ vendor</span></td><td>Mostly — verify</td></tr>
+  <tr><td>DCDM (dual-capacity direct)</td><td><span class="tag std">ETSI</span> <span class="tag vendor">(proprietary roots)</span></td><td>Verify</td></tr>
+  <tr><td>Standard-format text / status</td><td><span class="tag dmra">DMRA / FID 0</span></td><td>If all set to std format</td></tr>
+  <tr><td>TMS text (Motorola / Hytera formats)</td><td><span class="tag app">App layer</span></td><td>Single-vendor</td></tr>
+  <tr><td>GPS (LRRP), ARS registration</td><td><span class="tag app">App layer</span> (Motorola-origin)</td><td>Often cloned — verify</td></tr>
+  <tr><td>Remote Monitor, Radio Inhibit (stun)</td><td><span class="tag vendor">Vendor FID</span></td><td>Single-vendor</td></tr>
+  <tr><td>Man Down, Lone Worker, Hot Mic, Revert, Silent</td><td><span class="tag vendor">Vendor</span></td><td>Single-vendor</td></tr>
+  <tr><td>Encryption (Basic/Enhanced ARC4, AES)</td><td><span class="tag vendor">Vendor</span> <span class="tag dmra">(private DMRA spec)</span></td><td><strong>Don't assume</strong></td></tr>
+  <tr><td>Capacity Plus/Max, Connect Plus, XPT</td><td><span class="tag vendor">Vendor trunking</span></td><td>Single-vendor</td></tr>
+  <tr><td>IP Site Connect / infra linking</td><td><span class="tag vendor">Vendor</span> / <span class="tag app">network</span></td><td>Single-vendor</td></tr>
+  <tr><td>Scan, zones, priority scan, dual-watch</td><td><span class="tag local">Local codeplug</span></td><td>n/a — never on air</td></tr>
+</table>
+
+<h2>The two piles that matter</h2>
+<div class="callout">
+  <span class="label">Safe across any compliant DMR radio</span>
+  The air interface itself (TDMA, color code, slots, LC, CACH), <strong>group/private/all
+  call</strong>, <strong>clear voice</strong>, <strong>direct mode/talkaround</strong>, the
+  <strong>data bearer</strong>, the <strong>raw emergency flag + priority</strong>, and
+  <strong>Tier III trunking</strong>. If it's the bedrock of "being a DMR radio," it's standard.
+</div>
+<div class="callout bridge-note">
+  <span class="label">Assume single-vendor only — verify before promising</span>
+  <strong>Encryption</strong> (the highest-risk item — "standard on paper, fragile in
+  practice"), <strong>stun/remote monitor</strong>, <strong>Man Down / Lone Worker / hot
+  mic / revert / silent</strong>, <strong>vendor trunking</strong> (Cap Plus/Max, Connect
+  Plus, XPT), <strong>vendor text/GPS/ARS</strong>, and <strong>IP Site Connect</strong>.
+  These ride vendor FIDs or app layers and are <em>not</em> guaranteed across brands.
+</div>
+
+<div class="callout bridge-note">
+  <span class="label">What this means for your bridge</span>
+  <ul style="margin:0.3rem 0 0; padding-left:1.1rem;">
+    <li><strong>Build the core on the standard pile.</strong> Voice + group/private call + the emergency flag are interoperable — anchor your DMR↔PoC routing there and it works against any compliant fleet.</li>
+    <li><strong>Treat the vendor pile as "configurable, per-deployment."</strong> If a customer wants stun, encryption, or LRRP GPS bridged, that's a vendor-specific integration scoped to <em>their</em> radios — not a universal feature. Don't promise it generically.</li>
+    <li><strong>Encryption is a contract, not a checkbox.</strong> Same name ≠ same bytes. Never claim cross-vendor encrypted interop without bench testing the exact radios.</li>
+    <li><strong>Your own module's FID matters:</strong> what your DMR module emits/decodes determines which fleets you slot into. Confirm its FID support against each target fleet.</li>
+  </ul>
+</div>
+
+<div class="quiz" data-quiz='[
+  {"q":"What single field best predicts whether a DMR feature works cross-vendor?","options":["The color code value","The Feature ID byte","The transmit power","The time slot number"],"answer":1,"why":"FID 0x00 means any compliant radio can interpret it; a manufacturer FID (0x10 Motorola, 0x68 Hytera) means only that vendor defines the payload."},
+  {"q":"Which group is SAFE to assume works across any compliant DMR radios?","options":["Encryption and stun","Group/private call and clear voice","Man Down and hot mic","Capacity Plus trunking"],"answer":1,"why":"The air interface, the three call types, clear AMBE+2 voice, direct mode, the data bearer, the emergency flag and Tier III are ETSI-standard and interoperable."},
+  {"q":"Why is encryption the highest-risk interop item?","options":["It is illegal cross-vendor","Standard on paper, fragile live","It needs no key at all","It only works on Tier III"],"answer":1,"why":"ETSI is publicly silent, the DMRA spec is unpublished, and vendors patent implementations — same name can mean different bytes, so cross-vendor encrypted interop needs bench verification."},
+  {"q":"Where do scan, zones and priority scan sit in this scheme?","options":["ETSI air-interface features","Vendor FID features","Local codeplug, never on air","Application-layer protocols"],"answer":2,"why":"They are radio-local CPS/codeplug behaviours; they never traverse the air, so cross-vendor interoperability simply does not apply."}
+]'></div>
+
+<div class="primary-source">
+  <span class="label">Read this next (primary source)</span>
+  <a href="https://www.dmrassociation.org/dmr-iop-certification.html">DMR Association — IOP Certification Process</a>
+  defines the mandatory vs optional interoperable feature lists per tier — the authoritative
+  word on what "DMR-compliant" actually guarantees. Keep the companion
+  <a href="../reference/interop-matrix.html">Interoperability Reference Card</a> handy.
+</div>
+
+<div class="ask-teacher">
+  <span class="label">I'm your teacher — ask me</span>
+  Good follow-ups: "Which features must our v1 bridge support to work against any fleet?",
+  "How do we scope vendor features per-customer without forking the product?", or
+  "What FID support should we require from our DMR module vendor?"
+</div>
+
+<div class="lesson-footer">
+  <div class="nav-links">
+    <a href="0013-emergency-and-panic.html">← Lesson 13</a>
+    <a href="../reference/glossary.html">Glossary</a>
+    <a href="../reference/interop-matrix.html">Interop Reference Card</a>
+  </div>
+</div>
+
+<div class="sources">
+  <strong>Sources</strong>
+  <ol>
+    <li id="s1"><a href="https://github.com/OK-DMR/ok-dmrlib">ok-dmrlib — Feature Set ID registry</a> — FID 0x00 standardized, 0x0B DMRA, 0x10 Motorola, 0x08/0x68 Hytera; the interop lens.</li>
+    <li id="s2"><a href="https://www.dmrassociation.org/dmr-iop-certification.html">DMR Association — IOP Certification</a> — mandatory/optional interoperable features per tier; what compliance guarantees.</li>
+    <li id="s3"><a href="https://forums.radioreference.com/threads/official-standards-documents-for-dmr-encryption.399358/">RadioReference — DMR encryption standards</a> — DMRA TWG ARC4/DES/AES interop spec never published; Motorola patents; cross-vendor caveats.</li>
+    <li id="s4"><a href="https://www.etsi.org/deliver/etsi_ts/102300_102399/10236104/01.03.01_60/ts_10236104v010301p.pdf">ETSI TS 102 361-4</a> — Tier III as the standardized (interoperable) trunking, vs vendor Cap Plus/Max/Connect Plus/XPT.</li>
+  </ol>
+</div>
+<script src="../assets/quiz.js"></script>
+</body>
+</html>

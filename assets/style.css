@@ -132,6 +132,17 @@ ol.seq > li .clause { font-size: 0.72rem; color: var(--ink-soft); font-variant: 
 .burst .ctr { flex: 48; background: var(--accent-soft); border-left: 1px solid var(--rule); border-right: 1px solid var(--rule); }
 .burst small { display:block; color: var(--ink-soft); font-size: 0.68rem; }
 
+/* --- classification tags (reusable): interoperability categories --- */
+.tag { display: inline-block; font-size: 0.68rem; font-weight: 600; font-variant: small-caps; letter-spacing: 0.03em; padding: 0.05rem 0.4rem; border-radius: 3px; border: 1px solid; white-space: nowrap; }
+.tag.std    { background: #e4f0e4; border-color: #6b8f6b; color: #2f5a2f; }   /* ETSI standard */
+.tag.dmra   { background: #e3eef2; border-color: #4f8298; color: #1f5673; }   /* DMRA common (FID 0) */
+.tag.vendor { background: #f6e4e4; border-color: var(--accent); color: var(--accent); } /* vendor FID */
+.tag.app    { background: #f6efe1; border-color: #b5651d; color: #8a5012; }   /* application layer */
+.tag.local  { background: #ececec; border-color: #999; color: #555; }         /* codeplug-local */
+.legend { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 1rem 0; font-size: 0.82rem; }
+.legend span { display: flex; align-items: center; gap: 0.35rem; }
+table.cmp td .tag { margin: 0; }
+
 /* --- comparison table (reusable) --- */
 table.cmp { width: 100%; border-collapse: collapse; margin: 1.3rem 0; font-size: 0.9rem; }
 table.cmp th, table.cmp td { text-align: left; padding: 0.5rem 0.7rem; border: 1px solid var(--rule); vertical-align: top; }

@@ -21,9 +21,11 @@ and ends with a quick self-check quiz.
 11. [Analog vs Digital Channels](lessons/0011-analog-vs-digital.html) — FM vs DMR; the metadata gap
 12. [Data & Text Messaging](lessons/0012-data-and-text-messaging.html) — text, GPS, presence; voice-or-data interleaving
 13. [Emergency & Panic](lessons/0013-emergency-and-panic.html) — alarm vs flagged voice; revert; PoC elevation
+14. [Standard vs Vendor Features](lessons/0014-standard-vs-vendor-features.html) — interoperability: standard vs vendor/app
 
 ## Reference
 - [Glossary](reference/glossary.html) — canonical vocabulary
+- [Interoperability Matrix](reference/interop-matrix.html) — printable card: which features cross vendor lines
 
 ## Workspace files
 - `MISSION.md` — why this course exists
